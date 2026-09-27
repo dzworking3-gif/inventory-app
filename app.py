@@ -1,114 +1,107 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
-
-# 1. إعدادات الصفحة
-st.set_page_config(page_title="نظام إدارة المخزون الاحترافي", layout="wide", page_icon="📦")
-
-st.markdown("""
+# تطبيق تصميم وقالب احترافي (Modern Dashboard UI)
+st.markdown(f"""
     <style>
-    .main { direction: rtl; text-align: right; }
-    .stMetric { text-align: right; }
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+
+    /* 1. التنسيق العام والخطوط */
+    html, body, [class*="css"], .stApp {{
+        font-family: {t['font']} !important;
+        direction: {t['dir']};
+        background-color: #0f172a; /* خلفية داكنة احترافية Slate 900 */
+        color: #f8fafc;
+    }}
+
+    /* 2. تحسين القائمة الجانبية */
+    section[data-testid="stSidebar"] {{
+        background-color: #1e293b !important; /* Slate 800 */
+        border-{"left" if t['dir']=='rtl' else "right"}: 1px solid #334155;
+    }}
+
+    /* 3. تصميم تبويبات التنقل العلوية (Tabs) */
+    .stTabs [data-baseweb="tab-list"] {{
+        gap: 8px;
+        background-color: #1e293b;
+        padding: 8px 12px;
+        border-radius: 12px;
+        border: 1px solid #334155;
+    }}
+
+    .stTabs [data-baseweb="tab"] {{
+        height: 45px;
+        white-space: pre-wrap;
+        background-color: transparent;
+        border-radius: 8px;
+        color: #94a3b8 !important;
+        font-weight: 600;
+        border: none !important;
+        padding: 0 16px;
+    }}
+
+    .stTabs [aria-selected="true"] {{
+        background-color: #2563eb !important; /* أزرق احترافي Primary */
+        color: #ffffff !important;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }}
+
+    /* 4. بطاقات المؤشرات (KPI Cards) */
+    div[data-testid="stMetric"] {{
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        border: 1px solid #334155 !important;
+        border-{"right" if t['dir']=='rtl' else "left"}: 4px solid #2563eb !important;
+        padding: 18px !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }}
+    
+    div[data-testid="stMetric"]:hover {{
+        transform: translateY(-2px);
+        box-shadow: 0 6px 24px rgba(37, 99, 235, 0.2);
+    }}
+
+    div[data-testid="stMetricLabel"] {{
+        color: #94a3b8 !important;
+        font-size: 0.9rem !important;
+        font-weight: 500;
+    }}
+
+    div[data-testid="stMetricValue"] {{
+        color: #f8fafc !important;
+        font-weight: 800 !important;
+        font-size: 1.6rem !important;
+    }}
+
+    /* 5. تحسين الأزرار (Buttons) */
+    .stButton > button {{
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        transition: all 0.2s ease !important;
+    }}
+    
+    .stButton > button[kind="primary"] {{
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+        border: none !important;
+        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4) !important;
+    }}
+    
+    .stButton > button[kind="primary"]:hover {{
+        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
+        box-shadow: 0 6px 18px rgba(37, 99, 235, 0.6) !important;
+    }}
+
+    /* 6. تحسين حقول الإدخال والجداول */
+    div[data-baseweb="input"] > div, div[data-baseweb="select"] > div {{
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+        border-radius: 8px !important;
+        color: #f8fafc !important;
+    }}
+
+    div[data-testid="stForm"] {{
+        background-color: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 20px;
+    }}
     </style>
 """, unsafe_allow_html=True)
-
-st.title("📦 نظام إدارة وتسيير المخزونات الاحترافي")
-
-# 2. القائمة الجانبية: رفع ملفات Excel
-st.sidebar.header("لوحة التسيير واستيراد البيانات ⚙️")
-
-uploaded_file = st.sidebar.file_uploader("رفع/تحديث عبر Excel", type=["xlsx", "xls", "csv"])
-
-if 'inventory' not in st.session_state:
-    st.session_state.inventory = pd.DataFrame()
-
-if uploaded_file is not None:
-    try:
-        if uploaded_file.name.endswith('.csv'):
-            df_uploaded = pd.read_csv(uploaded_file)
-        else:
-            df_uploaded = pd.read_excel(uploaded_file)
-            
-        df_uploaded.columns = df_uploaded.columns.str.strip()
-        
-        # خريطة لتوحيد أسماء الأعمدة بالعربية أو الإنجليزية
-        col_map = {
-            'sku': 'الكود',
-            'name': 'اسم المنتج / المادة',
-            'category': 'الفئة',
-            'initial_stock': 'م. الأول',
-            'inputs': '(+) المدخلات',
-            'outputs': '(-) المخرجات',
-            'unit_price': 'سعر الوحدة (د.ج)',
-            'min_limit': 'حد الطلب الأدنى'
-        }
-        df_uploaded = df_uploaded.rename(columns=col_map)
-        st.session_state.inventory = df_uploaded
-        st.sidebar.success("تم تحميل الملف بنجاح!")
-    except Exception as e:
-        st.sidebar.error(f"حدث خطأ أثناء تحميل الملف: {e}")
-
-# 3. معالجة وتنظيف البيانات
-if not st.session_state.inventory.empty:
-    df = st.session_state.inventory.copy()
-
-    # إكمال الأعمدة الناقصة إن وجدت
-    expected_cols = ['الكود', 'اسم المنتج / المادة', 'الفئة', 'م. الأول', '(+) المدخلات', '(-) المخرجات', 'سعر الوحدة (د.ج)', 'حد الطلب الأدنى']
-    for col in expected_cols:
-        if col not in df.columns:
-            df[col] = 0 if col not in ['الكود', 'اسم المنتج / المادة', 'الفئة'] else '-'
-
-    # تحويل القيم الفارغة (None / NaN) إلى صفر للأعداد
-    num_cols = ['م. الأول', '(+) المدخلات', '(-) المخرجات', 'سعر الوحدة (د.ج)', 'حد الطلب الأدنى']
-    for col in num_cols:
-        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
-
-    # خوارزميات الحساب الآلي
-    # المخزون الباقي = م. الأول + المدخلات - المخرجات
-    df['المخزون الباقي'] = df['م. الأول'] + df['(+) المدخلات'] - df['(-) المخرجات']
-    df['القيمة الإجمالية (د.ج)'] = df['المخزون الباقي'] * df['سعر الوحدة (د.ج)']
-
-    # تحديد الحالة تلقائياً
-    def get_status(row):
-        if row['المخزون الباقي'] <= 0:
-            return '🔴 نفد من المخزون'
-        elif row['المخزون الباقي'] <= row['حد الطلب الأدنى']:
-            return '🟡 منخفض'
-        else:
-            return '🟢 متوفر'
-
-    df['الحالة'] = df.apply(get_status, axis=1)
-
-    # ترتيب الأعمدة للعرض
-    display_cols = [
-        'الكود', 'اسم المنتج / المادة', 'الفئة', 'م. الأول', 
-        '(+) المدخلات', '(-) المخرجات', 'المخزون الباقي', 
-        'سعر الوحدة (د.ج)', 'حد الطلب الأدنى', 'الحالة'
-    ]
-
-    # 4. عرض الجدول التفاعلي
-    st.subheader("📋 جدول المواد والمخزون")
-    
-    edited_df = st.data_editor(
-        df[display_cols],
-        column_config={
-            "سعر الوحدة (د.ج)": st.column_config.NumberColumn(format="%.2f د.ج"),
-            "المخزون الباقي": st.column_config.NumberColumn(disabled=True),
-            "الحالة": st.column_config.TextColumn(disabled=True),
-        },
-        use_container_width=True,
-        hide_index=True
-    )
-
-    if st.button("💾 حفظ كل التعديلات في قاعدة البيانات", type="primary"):
-        st.session_state.inventory = edited_df
-        st.success("تم حفظ التعديلات بنجاح!")
-        st.rerun()
-
-    # 5. التقييم المالي
-    st.subheader("💰 التقييم المالي الإجمالي")
-    total_val = df['القيمة الإجمالية (د.ج)'].sum()
-    st.metric("إجمالي قيمة المخزون الحالي", f"{total_val:,.2f} د.ج")
-
-else:
-    st.info("يرجى رفع ملف Excel يحتوي على بيانات المواد لبدء العرض الحسابي.")
