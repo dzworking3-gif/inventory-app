@@ -1,16 +1,13 @@
-import subprocess
-import sys
-
-# 0. تثبيت المكتبات تلقائياً إذا لم تكن موجودة
-try:
-    import openpyxl
-except ImportError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "openpyxl"])
-
 import streamlit as st
 import pandas as pd
 import sqlite3
 from datetime import datetime
+import io
+import openpyxl
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib import colors
 
 # 1. إعداد الصفحة
 st.set_page_config(page_title="نظام إدارة المخزون والمبيعات المتكامل", layout="wide", page_icon="📦")
