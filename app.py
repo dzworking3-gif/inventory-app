@@ -73,7 +73,7 @@ t = LANGUAGES[selected_lang]
 direction = "rtl" if selected_lang == "العربية" else "ltr"
 text_align = "right" if selected_lang == "العربية" else "left"
 
-# 3. تنسيق CSS شامل لإجبار جميع الخانات، الحقول، والجداول على أن تصبح داكنة بالكامل
+# 3. تنسيق CSS شامل لإجبار جميع الخانات والقوائم المنسدلة (بما فيها الشريط الجانبي) على أن تصبح داكنة
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
@@ -93,8 +93,13 @@ st.markdown(f"""
         color: #f8fafc !important;
     }}
 
-    /* حقول الإدخال والأرقام والقوائم المنسدلة */
-    input, textarea, select, div[data-baseweb="select"] > div, div[data-baseweb="base-input"] {{
+    /* فرض اللون الداكن على جميع حقول الإدخال، القوائم المنسدلة، وعناصر Baseweb في كل التطبيق والشريط الجانبي */
+    input, textarea, select, 
+    div[data-baseweb="select"], 
+    div[data-baseweb="select"] > div, 
+    div[data-baseweb="base-input"],
+    div[data-baseweb="popover"],
+    ul[data-baseweb="menu"] {{
         background-color: #0f172a !important;
         color: #f8fafc !important;
         border-color: #334155 !important;
@@ -107,8 +112,8 @@ st.markdown(f"""
         border-radius: 8px !important;
     }}
 
-    /* القوائم المنسدلة Selectbox الداخلية والخارجية */
-    div[data-baseweb="select"] div, div[data-baseweb="popover"] div, ul[data-baseweb="menu"] {{
+    /* عناصر وخيارات القوائم المنسدلة عند الفتح */
+    div[data-baseweb="popover"] *, ul[data-baseweb="menu"] * {{
         background-color: #0f172a !important;
         color: #f8fafc !important;
     }}
