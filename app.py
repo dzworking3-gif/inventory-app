@@ -391,3 +391,63 @@ c.execute('''CREATE TABLE IF NOT EXISTS document_items (
                 unit_price REAL,
                 total REAL)''')
 conn.commit()
+import io
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib import colors
+
+def generate_pdf_invoice(doc_id, doc_type, party_name, date_str, items_df, total_amount):
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+    story = []
+    
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(name='TitleStyle', parent=styles['Heading1'], alignment=1, fontSize=18)
+    normal_style = ParagraphStyle(name='NormalStyle', parent=styles['Normal'], alignment=2)
+    
+    # عنوان المستند
+    story.append(Paragraph(f"<b>{doc_type}</b>", title_style))
+    story.append(Spacer(1, 15))
+    
+    # معلومات الوثيقة
+    info_data = [
+        [f"رقم الوثيقة: {doc_id}", f"التاريخ: {date_str}"],
+        [f"الطرف الثاني: {party_name}", f"الحالة: مكتمل"]
+    ]
+    t_info = Table(info_data, colWidths=[250, 250])
+    t_info.setStyle(TableStyle([
+        ('TEXTCOLOR', (0,0), (-1,-1), colors.whitesmoke),
+        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor("#1e293b")),
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('PADDING', (0,0), (-1,-1), 8),
+    ]))
+    story.append(t_info)
+    story.append(Spacer(1, 20))
+    
+    # جدول المنتجات
+    table_data = [["الإجمالي", "سعر الوحدة", "الكمية", "اسم المنتج / الكود"]]
+    for _, row in items_df.iterrows():
+        table_data.append([
+            f"${row['total']:,.2f}",
+            f"${row['unit_price']:,.2f}",
+            f"{row['quantity']}",
+            f"{row['sku']}"
+        ])
+    
+    table_data.append(["", "", "المجموع الكلي:", f"${total_amount:,.2f}"])
+    
+    t_items = Table(table_data, colWidths=[100, 100, 100, 200])
+    t_items.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#2563eb")),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('GRID', (0,0), (-1,-1), 1, colors.HexColor("#cbd5e1")),
+        ('PADDING', (0,0), (-1,-1), 6),
+        ('FONTBACKGROUND', (0,-1), (-1,-1), colors.HexColor("#f1f5f9")),
+    ]))
+    story.append(t_items)
+    
+    doc.build(story)
+    buffer.seek(0)
+    return buffer
