@@ -1,27 +1,100 @@
+import subprocess
+import sys
+
+# 0. تثبيت المكاتب تلقائياً إذا لم تكن موجودة
+try:
+    import openpyxl
+except ImportError:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "openpyxl"])
+
 import streamlit as st
 import pandas as pd
 import sqlite3
 from datetime import datetime
-from io import StringIO
 
 # 1. إعداد الصفحة
-st.set_page_config(page_title="نظام إدارة المخزون والمبيعات المتكامل", layout="wide")
+st.set_page_config(page_title="نظام إدارة المخزون والمبيعات المتكامل", layout="wide", page_icon="📦")
 
+# 2. إضافة خلفية احترافية مع تراكب مظلم ودعم التنسيق العربي
 st.markdown("""
     <style>
-    .main { direction: rtl; text-align: right; }
-    div[data-testid="stMetric"] {
-        background-color: #1e293b;
-        color: #ffffff;
-        padding: 15px;
-        border-radius: 10px;
-        border: 1px solid #334155;
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+
+    html, body, [class*="css"], .stApp {
+        font-family: 'Tajawal', sans-serif !important;
+        direction: rtl;
+        text-align: right;
     }
-    div[data-testid="stMetricValue"] { color: #3b82f6 !important; }
+
+    /* خلفية مستودع ولوجستيات احترافية مع غطاء شبكي داكن */
+    .stApp {
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.95)), 
+                    url("https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=1920&auto=format&fit=crop");
+        background-attachment: fixed;
+        background-size: cover;
+        background-position: center;
+        color: #f8fafc;
+    }
+
+    /* تحسين شكل القائمة الجانبية */
+    section[data-testid="stSidebar"] {
+        background-color: rgba(15, 23, 42, 0.9) !important;
+        border-left: 1px solid #334155;
+    }
+
+    /* تحسين تصميم بطاقات الأحصائيات KPIs */
+    div[data-testid="stMetric"] {
+        background: rgba(30, 41, 59, 0.85);
+        border: 1px solid #334155 !important;
+        border-right: 4px solid #3b82f6 !important;
+        padding: 16px !important;
+        border-radius: 12px !important;
+        backdrop-filter: blur(8px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    div[data-testid="stMetricLabel"] {
+        color: #94a3b8 !important;
+        font-size: 0.95rem !important;
+        font-weight: 600;
+    }
+
+    div[data-testid="stMetricValue"] {
+        color: #38bdf8 !important;
+        font-weight: 800 !important;
+        font-size: 1.7rem !important;
+    }
+
+    /* إطارات الاستمارات والأجسام التفاعلية */
+    div[data-testid="stForm"], div.stTabs [data-baseweb="tab-panel"] {
+        background: rgba(30, 41, 59, 0.8) !important;
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 20px;
+        backdrop-filter: blur(6px);
+    }
+
+    /* أزرار الإرسال والحفظ */
+    .stButton > button {
+        border-radius: 8px !important;
+        font-weight: 700 !important;
+        background-color: #2563eb !important;
+        color: white !important;
+        border: none !important;
+    }
+    .stButton > button:hover {
+        background-color: #1d4ed8 !important;
+    }
+
+    /* تحسين رؤية النصوص العناوين */
+    h1, h2, h3, h4 {
+        color: #f1f5f9 !important;
+        font-weight: 800 !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# 2. إنشاء وإنشاء جداول قاعدة البيانات (SQLite)
+# 3. إنشاء قاعدة البيانات
 conn = sqlite3.connect('inventory_system.db', check_same_thread=False)
 c = conn.cursor()
 
@@ -44,7 +117,7 @@ c.execute('''CREATE TABLE IF NOT EXISTS transactions (
 
 conn.commit()
 
-# 3. الدوال المساعدة للعمليات والحسابات
+# 4. دالة جلب وحساب بيانات المخزون
 def get_inventory():
     df_prod = pd.read_sql_query("SELECT * FROM products", conn)
     df_trans = pd.read_sql_query("SELECT * FROM transactions", conn)
@@ -52,7 +125,6 @@ def get_inventory():
     if df_prod.empty:
         return pd.DataFrame(columns=['sku', 'name', 'category', 'initial_stock', 'inputs', 'outputs', 'stock', 'price', 'total_value', 'min_limit', 'status'])
     
-    # حساب المدخلات والمخرجات لكل منتج
     inputs = df_trans[df_trans['type'] == 'إدخال'].groupby('sku')['quantity'].sum().to_dict() if not df_trans.empty else {}
     outputs = df_trans[df_trans['type'] == 'إخراج'].groupby('sku')['quantity'].sum().to_dict() if not df_trans.empty else {}
     
@@ -71,7 +143,7 @@ def get_inventory():
     df_prod['status'] = df_prod.apply(get_status, axis=1)
     return df_prod
 
-# 4. شريط العنوان والتنقل الرئيسي
+# 5. الواجهة الرئيسية
 st.title("📦 نظام إدارة المخزون والمبيعات المتكامل")
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
@@ -94,8 +166,8 @@ with tab1:
     total_val = df_inv['total_value'].sum() if not df_inv.empty else 0
     low_stock = len(df_inv[df_inv['stock'] <= df_inv['min_limit']]) if not df_inv.empty else 0
     
-    c1.metric("إجمالي المنتجات", f"{total_items}")
-    c2.metric("إجمالي القطع المخزنة", f"{total_stock:,.0f}")
+    c1.metric("إجمالي أصناف المنتجات", f"{total_items}")
+    c2.metric("إجمالي القطع بالمخزن", f"{total_stock:,.0f}")
     c3.metric("القيمة المالية الإجمالية", f"${total_val:,.2f}")
     c4.metric("منتجات تحت حد الطلب", f"{low_stock}")
     
@@ -105,8 +177,8 @@ with tab1:
         st.dataframe(
             df_inv[['sku', 'name', 'category', 'stock', 'price', 'total_value', 'status']],
             column_config={
-                "sku": "رقم المنتج", "name": "اسم المنتج", "category": "الفئة",
-                "stock": "المخزون المتبقي", "price": "السعر ($)", "total_value": "القيمة ($)", "status": "الحالة"
+                "sku": "رقم المنتج (SKU)", "name": "اسم المنتج", "category": "الفئة",
+                "stock": "المخزون المتبقي", "price": "السعر ($)", "total_value": "القيمة الإجمالية ($)", "status": "الحالة"
             },
             use_container_width=True, hide_index=True
         )
@@ -217,8 +289,6 @@ with tab5:
     
     if not df_history.empty:
         st.dataframe(df_history, use_container_width=True, hide_index=True)
-        
-        # تصدير التقرير
         csv_data = df_history.to_csv(index=False).encode('utf-8-sig')
         st.download_button("📥 تحميل سجل الحركة الكامل (CSV)", data=csv_data, file_name="سجل_حركة_المخزون.csv", mime="text/csv")
     else:
