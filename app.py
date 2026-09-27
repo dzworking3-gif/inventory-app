@@ -11,6 +11,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
 import sqlite3
+import io
 from datetime import datetime
 
 # 1. إعداد الصفحة
@@ -29,7 +30,8 @@ LANGUAGES = {
         "sale_title": "🧾 تسجيل عملية بيع / مخرجات", "select_prod": "اختر المنتج", "qty_sold": "الكمية المباعة", "client_name": "اسم الزبون / الجهة",
         "stock_available": "المخزون المتاح حالياً", "btn_sell": "تسجيل البيع وإصدار الفاتورة", "err_qty": "الكمية المطلوبة أكبر من المخزون المتاح!",
         "buy_title": "📥 تسجيل عملية توريد / مدخلات جديدة", "select_prod_supply": "اختر المنتج لتزويده", "qty_received": "الكمية المستلمة", "supplier_name": "اسم المورد",
-        "btn_buy": "إضافة للمخزون", "history_title": "📜 سجل حركة المخزون التاريخي (Ledger)", "download_csv": "📥 تحميل سجل الحركة الكامل (CSV)",
+        "btn_buy": "إضافة للمخزون", "history_title": "📜 سجل حركة المخزون التاريخي (Ledger)", 
+        "download_excel": "📥 تحميل ملف Excel للمخزون", "download_history_excel": "📥 تحميل سجل الحركات (Excel)",
         "success_prod": "تم حفظ المنتج بنجاح في قاعدة البيانات!", "success_import": "تم استيراد البيانات بنجاح!", "success_sale": "تم تسجيل المبيعات بنجاح للزبون",
         "success_buy": "تمت إضافة الكميات الجديدة للمخزون بنجاح!", "no_history": "لا توجد عمليات مسجلة في السجل بعد."
     },
@@ -44,7 +46,8 @@ LANGUAGES = {
         "sale_title": "🧾 Enregistrer une Vente / Sortie", "select_prod": "Sélectionner le Produit", "qty_sold": "Quantité Vendue", "client_name": "Nom du Client",
         "stock_available": "Stock Actuel Disponible", "btn_sell": "Enregistrer la Vente", "err_qty": "La quantité demandée dépasse le stock disponible !",
         "buy_title": "📥 Enregistrer un Réapprovisionnement", "select_prod_supply": "Produit à Réapprovisionner", "qty_received": "Quantité Reçue", "supplier_name": "Nom du Fournisseur",
-        "btn_buy": "Ajouter au Stock", "history_title": "📜 Historique des Mouvements de Stock (Ledger)", "download_csv": "📥 Télécharger l'historique complet (CSV)",
+        "btn_buy": "Ajouter au Stock", "history_title": "📜 Historique des Mouvements de Stock (Ledger)", 
+        "download_excel": "📥 Télécharger le fichier Excel du stock", "download_history_excel": "📥 Télécharger l'historique (Excel)",
         "success_prod": "Produit enregistré avec succès !", "success_import": "Données importées avec succès !", "success_sale": "Vente enregistrée avec succès pour le client",
         "success_buy": "Quantités ajoutées au stock avec succès !", "no_history": "Aucun mouvement enregistré pour le moment."
     },
@@ -59,7 +62,8 @@ LANGUAGES = {
         "sale_title": "🧾 Register Sale / Output", "select_prod": "Select Product", "qty_sold": "Sold Quantity", "client_name": "Client / Entity Name",
         "stock_available": "Current Available Stock", "btn_sell": "Register Sale & Issue Invoice", "err_qty": "Requested quantity exceeds available stock!",
         "buy_title": "📥 Register Supply / New Inputs", "select_prod_supply": "Select Product to Restock", "qty_received": "Received Quantity", "supplier_name": "Supplier Name",
-        "btn_buy": "Add to Stock", "history_title": "📜 Historical Inventory Ledger", "download_csv": "📥 Download Full Ledger (CSV)",
+        "btn_buy": "Add to Stock", "history_title": "📜 Historical Inventory Ledger", 
+        "download_excel": "📥 Download Inventory Excel File", "download_history_excel": "📥 Download Ledger (Excel)",
         "success_prod": "Product successfully saved to database!", "success_import": "Data successfully imported!", "success_sale": "Sale successfully registered for client",
         "success_buy": "New quantities successfully added to stock!", "no_history": "No transactions recorded in the ledger yet."
     }
@@ -74,7 +78,7 @@ t = LANGUAGES[selected_lang]
 direction = "rtl" if selected_lang == "العربية" else "ltr"
 text_align = "right" if selected_lang == "العربية" else "left"
 
-# 3. حقن كود CSS شامل + JavaScript مباشر لإجبار القوائم المنسدلة والـ Popovers على أن تصبح داكنة
+# 3. حقن تنسيق CSS شامل و JavaScript للقوائم الداكنة
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
@@ -94,7 +98,6 @@ st.markdown(f"""
         color: #f8fafc !important;
     }}
 
-    /* إجبار كل العناصر المدخلة على الظهور بشكل داكن */
     input, textarea, select, 
     div[data-baseweb="select"] > div, 
     div[data-baseweb="base-input"] {{
@@ -103,14 +106,11 @@ st.markdown(f"""
         border-color: #334155 !important;
     }}
 
-    /* استهداف جميع قوائم الـ Select والخيارات والـ Popovers المنبثقة من الجذر */
     div[data-baseweb="popover"], 
     div[data-baseweb="menu"], 
     ul[data-baseweb="menu"],
     div[role="listbox"],
-    ul[role="listbox"],
-    div[class*="popover"],
-    div[class*="menu"] {{
+    ul[role="listbox"] {{
         background-color: #0f172a !important;
         color: #f8fafc !important;
     }}
@@ -131,7 +131,6 @@ st.markdown(f"""
         color: #38bdf8 !important;
     }}
 
-    /* صندوق رفع الملفات */
     section[data-testid="stFileUploader"] {{
         background-color: #1e293b !important;
         border: 2px dashed #3b82f6 !important;
@@ -158,7 +157,6 @@ st.markdown(f"""
         border-radius: 8px !important;
     }}
 
-    /* التبويبات Tabs */
     button[data-baseweb="tab"] {{
         background-color: transparent !important;
     }}
@@ -176,18 +174,15 @@ st.markdown(f"""
         font-weight: 800 !important;
     }}
 
-    /* العناوين والنصوص */
     label, p, span, div, h1, h2, h3, h4, h5, h6 {{
         color: #f8fafc !important;
     }}
 
-    /* الشريط الجانبي */
     section[data-testid="stSidebar"] {{
         background-color: rgba(15, 23, 42, 0.98) !important;
         border-right: 1px solid #1e293b;
     }}
 
-    /* بطاقات KPIs */
     div[data-testid="stMetric"] {{
         background: rgba(30, 41, 59, 0.85) !important;
         border: 1px solid #334155 !important;
@@ -227,7 +222,7 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# حل إضافي بواسطة JavaScript لمراقبة وتعديل خلفية عناصر الـ Dropdown في نافذة المتصفح الرئيسية (Root DOM)
+# JavaScript لمراقبة وتعديل خلفية عناصر الـ Dropdown المنبثقة
 components.html("""
 <script>
 const observeDropdowns = () => {
@@ -247,7 +242,7 @@ try { observeDropdowns(); } catch(e) {}
 </script>
 """, height=0)
 
-# 4. إنشاء قاعدة البيانات
+# 4. قاعدة البيانات
 conn = sqlite3.connect('inventory_system.db', check_same_thread=False)
 c = conn.cursor()
 
@@ -296,6 +291,14 @@ def get_inventory():
     df_prod['status'] = df_prod.apply(get_status, axis=1)
     return df_prod
 
+# دالة لتوليد ملف Excel في الذاكرة لتنزيله
+def to_excel(df):
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Sheet1')
+    processed_data = output.getvalue()
+    return processed_data
+
 # 6. الواجهة الرئيسية
 st.title(t["title"])
 
@@ -318,8 +321,20 @@ with tab1:
     c4.metric(t["kpi4"], f"{low_stock}")
     
     st.divider()
-    st.subheader(t["current_stock_title"])
+    
+    col_title, col_btn = st.columns([3, 1])
+    col_title.subheader(t["current_stock_title"])
+    
     if not df_inv.empty:
+        # زر تحميل ملف Excel لحالة المخزون
+        excel_file = to_excel(df_inv)
+        col_btn.download_button(
+            label=t["download_excel"],
+            data=excel_file,
+            file_name="inventory_report.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        
         st.dataframe(
             df_inv[['sku', 'name', 'category', 'stock', 'price', 'total_value', 'status']],
             column_config={
@@ -456,7 +471,14 @@ with tab5:
     
     if not df_history.empty:
         st.dataframe(df_history, use_container_width=True, hide_index=True)
-        csv_data = df_history.to_csv(index=False).encode('utf-8-sig')
-        st.download_button(t["download_csv"], data=csv_data, file_name="inventory_ledger.csv", mime="text/csv")
+        
+        # زر تحميل سجل الحركة كملف Excel حقيقي
+        history_excel = to_excel(df_history)
+        st.download_button(
+            label=t["download_history_excel"],
+            data=history_excel,
+            file_name="inventory_ledger_report.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
     else:
         st.info(t["no_history"])
