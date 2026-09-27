@@ -70,15 +70,13 @@ LANGUAGES = {
 }
 
 # شريط جانبي لاختيار اللغة
-st.sidebar.markdown("### 🌐 اختيار اللغة / Language / Langue")
 selected_lang = st.sidebar.selectbox("Language", ["العربية", "Français", "English"], label_visibility="collapsed")
 t = LANGUAGES[selected_lang]
 
-# اتجاه الصفحة بناءً على اللغة
 direction = "rtl" if selected_lang == "العربية" else "ltr"
 text_align = "right" if selected_lang == "العربية" else "left"
 
-# 3. حقن تنسيق CSS شامل و JavaScript للقوائم الداكنة
+# 3. حقن تنسيق CSS شامل (تعديل الأزرار وعزل أزرار التحميل لتظهر بنفس الشكل البارز)
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
@@ -143,20 +141,6 @@ st.markdown(f"""
         background-color: transparent !important;
     }}
 
-    section[data-testid="stFileUploader"] button {{
-        background-color: #2563eb !important;
-        color: #f8fafc !important;
-        border-radius: 8px !important;
-        border: none !important;
-        padding: 6px 16px !important;
-        font-weight: bold !important;
-    }}
-
-    div[data-testid="stFileUploaderDropzone"] {{
-        background-color: #0f172a !important;
-        border-radius: 8px !important;
-    }}
-
     button[data-baseweb="tab"] {{
         background-color: transparent !important;
     }}
@@ -207,40 +191,24 @@ st.markdown(f"""
         padding: 20px !important;
     }}
 
-    .stButton > button {{
+    /* تنسيق موحد لجميع الأزرار (بما فيها أزرار التحميل Download Buttons) لتظهر بوضوح تام */
+    .stButton > button, div[data-testid="stDownloadButton"] > button {{
         border-radius: 8px !important;
         font-weight: 700 !important;
         background-color: #2563eb !important;
         color: #ffffff !important;
         border: none !important;
+        width: 100% !important;
+        padding: 0.5rem 1rem !important;
         transition: 0.3s;
     }}
     
-    .stButton > button:hover {{
+    .stButton > button:hover, div[data-testid="stDownloadButton"] > button:hover {{
         background-color: #1d4ed8 !important;
+        color: #ffffff !important;
     }}
     </style>
 """, unsafe_allow_html=True)
-
-# JavaScript لمراقبة وتعديل خلفية عناصر الـ Dropdown المنبثقة
-components.html("""
-<script>
-const observeDropdowns = () => {
-    const observer = new MutationObserver((mutations) => {
-        document.querySelectorAll('div[data-baseweb="popover"], div[data-baseweb="menu"], ul[data-baseweb="menu"], div[role="listbox"]').forEach(el => {
-            el.style.backgroundColor = '#0f172a';
-            el.style.color = '#f8fafc';
-        });
-        document.querySelectorAll('li[data-baseweb="option"], div[data-baseweb="option"], div[role="option"]').forEach(el => {
-            el.style.backgroundColor = '#0f172a';
-            el.style.color = '#f8fafc';
-        });
-    });
-    observer.observe(parent.document.body, { childList: true, subtree: true });
-};
-try { observeDropdowns(); } catch(e) {}
-</script>
-""", height=0)
 
 # 4. قاعدة البيانات
 conn = sqlite3.connect('inventory_system.db', check_same_thread=False)
@@ -291,7 +259,6 @@ def get_inventory():
     df_prod['status'] = df_prod.apply(get_status, axis=1)
     return df_prod
 
-# دالة لتوليد ملف Excel في الذاكرة لتنزيله
 def to_excel(df):
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
@@ -326,14 +293,14 @@ with tab1:
     col_title.subheader(t["current_stock_title"])
     
     if not df_inv.empty:
-        # زر تحميل ملف Excel لحالة المخزون
-        excel_file = to_excel(df_inv)
-        col_btn.download_button(
-            label=t["download_excel"],
-            data=excel_file,
-            file_name="inventory_report.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+        with col_btn:
+            excel_file = to_excel(df_inv)
+            st.download_button(
+                label=t["download_excel"],
+                data=excel_file,
+                file_name="inventory_report.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
         
         st.dataframe(
             df_inv[['sku', 'name', 'category', 'stock', 'price', 'total_value', 'status']],
@@ -472,7 +439,6 @@ with tab5:
     if not df_history.empty:
         st.dataframe(df_history, use_container_width=True, hide_index=True)
         
-        # زر تحميل سجل الحركة كملف Excel حقيقي
         history_excel = to_excel(df_history)
         st.download_button(
             label=t["download_history_excel"],
