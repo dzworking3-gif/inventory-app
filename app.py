@@ -15,47 +15,58 @@ from datetime import datetime
 # 1. إعداد الصفحة
 st.set_page_config(page_title="نظام إدارة المخزون والمبيعات المتكامل", layout="wide", page_icon="📦")
 
-# 2. إضافة التنسيق الخلفي وإصلاح ألوان النصوص والتبويبات
+# 2. تنسيق شامل وإجبار كافة النصوص للظهور باللون الأبيض الناصع
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
 
-    html, body, [class*="css"], .stApp {
+    /* تطبيق خط tajawal وتوجيه النص لجميع العناصر */
+    * {
         font-family: 'Tajawal', sans-serif !important;
         direction: rtl;
-        text-align: right;
     }
 
     /* خلفية المستودع */
     .stApp {
-        background: linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.95)), 
-                    url("https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=1920&auto=format&fit=crop");
-        background-attachment: fixed;
-        background-size: cover;
-        background-position: center;
-        color: #f8fafc;
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.94), rgba(30, 41, 59, 0.96)), 
+                    url("https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=1920&auto=format&fit=crop") !important;
+        background-attachment: fixed !important;
+        background-size: cover !important;
+        background-position: center !important;
+        color: #ffffff !important;
     }
 
-    /* إصلاح ألوان أسماء التبويبات (Tabs) */
-    button[data-baseweb="tab"] {
-        color: #e2e8f0 !important;
+    /* 1. إصلاح لون عناوين التبويبات (Tabs) بالكامل */
+    button[data-baseweb="tab"] p, button[data-baseweb="tab"] div, button[data-baseweb="tab"] span {
+        color: #cbd5e1 !important;
+        font-weight: 700 !important;
+        font-size: 1.1rem !important;
+    }
+    
+    button[data-baseweb="tab"][aria-selected="true"] p, 
+    button[data-baseweb="tab"][aria-selected="true"] div, 
+    button[data-baseweb="tab"][aria-selected="true"] span {
+        color: #38bdf8 !important;
+        font-weight: 800 !important;
+    }
+
+    /* 2. إصلاح كافة النصوص والتسميات (Labels) فوق خانات الإدخال */
+    label, p, span, div, h1, h2, h3, h4, h5, h6 {
+        color: #ffffff !important;
+    }
+
+    .stTextInput label p, .stNumberInput label p, .stSelectbox label p, .stFileUploader label p {
+        color: #ffffff !important;
         font-weight: 700 !important;
         font-size: 1.05rem !important;
     }
-    
-    button[data-baseweb="tab"][aria-selected="true"] {
-        color: #38bdf8 !important;
-        border-bottom-color: #38bdf8 !important;
+
+    /* 3. تحسين شكل ولون حقول الإدخال */
+    input, textarea, select {
+        color: #ffffff !important;
+        background-color: #0f172a !important;
     }
 
-    /* إصلاح ألوان التسميات فوق المدخلات (Labels) */
-    .stTextInput label, .stNumberInput label, .stSelectbox label, .stFileUploader label {
-        color: #f8fafc !important;
-        font-weight: 700 !important;
-        font-size: 1rem !important;
-    }
-
-    /* تحسين شكل حقول الإدخال */
     .stTextInput input, .stNumberInput input, div[data-baseweb="select"] {
         background-color: #0f172a !important;
         color: #ffffff !important;
@@ -63,41 +74,37 @@ st.markdown("""
         border-radius: 8px !important;
     }
 
-    /* تحسين القائمة الجانبية */
+    /* 4. تحسين شكل القائمة الجانبية */
     section[data-testid="stSidebar"] {
-        background-color: rgba(15, 23, 42, 0.9) !important;
+        background-color: rgba(15, 23, 42, 0.95) !important;
         border-left: 1px solid #334155;
     }
 
-    /* تحسين بطاقات الأحصائيات KPIs */
+    /* 5. بطاقات الإحصائيات KPIs */
     div[data-testid="stMetric"] {
-        background: rgba(30, 41, 59, 0.85);
+        background: rgba(30, 41, 59, 0.9) !important;
         border: 1px solid #334155 !important;
         border-right: 4px solid #3b82f6 !important;
         padding: 16px !important;
         border-radius: 12px !important;
-        backdrop-filter: blur(8px);
     }
 
-    div[data-testid="stMetricLabel"] {
-        color: #cbd5e1 !important;
-        font-size: 0.95rem !important;
-        font-weight: 600;
+    div[data-testid="stMetricLabel"] p {
+        color: #94a3b8 !important;
+        font-size: 1rem !important;
     }
 
-    div[data-testid="stMetricValue"] {
+    div[data-testid="stMetricValue"] div {
         color: #38bdf8 !important;
         font-weight: 800 !important;
-        font-size: 1.7rem !important;
     }
 
     /* إطارات الاستمارات */
     div[data-testid="stForm"], div.stTabs [data-baseweb="tab-panel"] {
-        background: rgba(30, 41, 59, 0.85) !important;
-        border: 1px solid #334155;
-        border-radius: 12px;
-        padding: 20px;
-        backdrop-filter: blur(6px);
+        background: rgba(30, 41, 59, 0.9) !important;
+        border: 1px solid #334155 !important;
+        border-radius: 12px !important;
+        padding: 20px !important;
     }
 
     /* الأزرار */
@@ -105,13 +112,12 @@ st.markdown("""
         border-radius: 8px !important;
         font-weight: 700 !important;
         background-color: #2563eb !important;
-        color: white !important;
+        color: #ffffff !important;
         border: none !important;
     }
 
-    h1, h2, h3, h4 {
-        color: #f1f5f9 !important;
-        font-weight: 800 !important;
+    .stButton > button p {
+        color: #ffffff !important;
     }
     </style>
 """, unsafe_allow_html=True)
