@@ -373,3 +373,21 @@ with tab5:
         st.download_button("📥 تحميل سجل الحركة الكامل (CSV)", data=csv_data, file_name="سجل_حركة_المخزون.csv", mime="text/csv")
     else:
         st.info("لا توجد عمليات مسجلة في السجل بعد.")
+# جدول الفواتير وسندات الطلب
+c.execute('''CREATE TABLE IF NOT EXISTS documents (
+                doc_id TEXT PRIMARY KEY,
+                doc_type TEXT, -- 'فاتورة مبيعات' أو 'سند طلب'
+                party_name TEXT,
+                date TEXT,
+                total_amount REAL,
+                status TEXT)''')
+
+# جدول تفاصيل الفاتورة/السند (المنتجات المدرجة)
+c.execute('''CREATE TABLE IF NOT EXISTS document_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                doc_id TEXT,
+                sku TEXT,
+                quantity REAL,
+                unit_price REAL,
+                total REAL)''')
+conn.commit()
