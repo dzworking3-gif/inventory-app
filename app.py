@@ -87,7 +87,7 @@ t = LANGUAGES[selected_lang]
 direction = "rtl" if selected_lang == "العربية" else "ltr"
 text_align = "right" if selected_lang == "العربية" else "left"
 
-# 3. تنسيق CSS مضبوط لمنع التداخل والتعارض تماماً
+# 3. تنسيق CSS مُحسّن لحل تداخل الشريط العلوي والقائمة الجانبية تماماً
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
@@ -96,14 +96,26 @@ st.markdown(f"""
         font-family: 'Tajawal', sans-serif !important;
     }}
 
-    /* إلغاء تداخل شريط Streamlit العلوي وحواشي الصفحة */
+    /* فصل المحتوى عن شريط أدوات Streamlit العلوي */
     header[data-testid="stHeader"] {{
         background: transparent !important;
+        pointer-events: none !important;
     }}
     
+    header[data-testid="stHeader"] * {{
+        pointer-events: auto !important;
+    }}
+
     .block-container {{
-        padding-top: 2rem !important;
+        padding-top: 4rem !important;
         padding-bottom: 2rem !important;
+    }}
+
+    /* إبعاد عناصر القائمة الجانبية عن زر الطي العلوي */
+    section[data-testid="stSidebar"] {{
+        background-color: rgba(15, 23, 42, 0.98) !important;
+        border-right: 1px solid #1e293b;
+        padding-top: 3rem !important;
     }}
 
     .stApp {{
@@ -118,7 +130,7 @@ st.markdown(f"""
     }}
 
     h1 {{
-        margin-top: 0px !important;
+        margin-top: 10px !important;
         padding-top: 0px !important;
         font-size: 1.7rem !important;
         font-weight: 800 !important;
@@ -211,11 +223,6 @@ st.markdown(f"""
     label, p, span, div, h2, h3, h4, h5, h6 {{
         color: #f8fafc !important;
         text-align: {text_align} !important;
-    }}
-
-    section[data-testid="stSidebar"] {{
-        background-color: rgba(15, 23, 42, 0.98) !important;
-        border-right: 1px solid #1e293b;
     }}
 
     div[data-testid="stMetric"] {{
