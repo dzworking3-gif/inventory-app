@@ -73,7 +73,7 @@ t = LANGUAGES[selected_lang]
 direction = "rtl" if selected_lang == "العربية" else "ltr"
 text_align = "right" if selected_lang == "العربية" else "left"
 
-# 3. تنسيق CSS شامل لإجبار جميع الخانات والقوائم المنسدلة (بما فيها الشريط الجانبي) على أن تصبح داكنة
+# 3. تنسيق CSS شامل لإجبار القوائم المنسدلة وخانات اختيار اللغة على أن تصبح داكنة بالكامل
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
@@ -93,31 +93,31 @@ st.markdown(f"""
         color: #f8fafc !important;
     }}
 
-    /* فرض اللون الداكن على جميع حقول الإدخال، القوائم المنسدلة، وعناصر Baseweb في كل التطبيق والشريط الجانبي */
+    /* إجبار حقول الإدخال والقوائم المنسدلة على اللون الداكن */
     input, textarea, select, 
-    div[data-baseweb="select"], 
     div[data-baseweb="select"] > div, 
-    div[data-baseweb="base-input"],
-    div[data-baseweb="popover"],
-    ul[data-baseweb="menu"] {{
+    div[data-baseweb="base-input"] {{
         background-color: #0f172a !important;
         color: #f8fafc !important;
         border-color: #334155 !important;
     }}
 
-    .stTextInput input, .stNumberInput input {{
+    /* استهداف القوائم المنبثقة والخارجية (Popovers & Menus) التي تظهر عند النقر على القوائم المنسدلة */
+    div[data-baseweb="popover"],
+    div[data-baseweb="menu"],
+    ul[data-baseweb="menu"],
+    div[id^="baseui-menu-"] {{
         background-color: #0f172a !important;
         color: #f8fafc !important;
-        border: 1px solid #475569 !important;
-        border-radius: 8px !important;
     }}
 
-    /* عناصر وخيارات القوائم المنسدلة عند الفتح */
-    div[data-baseweb="popover"] *, ul[data-baseweb="menu"] * {{
+    div[data-baseweb="popover"] div, 
+    div[data-baseweb="popover"] span,
+    ul[data-baseweb="menu"] li {{
         background-color: #0f172a !important;
         color: #f8fafc !important;
     }}
-    
+
     li[data-baseweb="option"] {{
         background-color: #0f172a !important;
         color: #f8fafc !important;
