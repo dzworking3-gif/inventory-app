@@ -83,17 +83,27 @@ LANGUAGES = {
 selected_lang = st.sidebar.selectbox("Language / Langue", ["العربية", "Français", "English"], label_visibility="collapsed")
 t = LANGUAGES[selected_lang]
 
-# تحديد الاتجاه تلقائياً (RTL للعربية، LTR للفرنسية والإنجليزية)
+# تحديد الاتجاه تلقائياً
 direction = "rtl" if selected_lang == "العربية" else "ltr"
 text_align = "right" if selected_lang == "العربية" else "left"
 
-# 3. تنسيق CSS مُحسّن ومضبوط لمنع التداخلات تماماً
+# 3. تنسيق CSS مضبوط لمنع التداخل والتعارض تماماً
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
 
     * {{
         font-family: 'Tajawal', sans-serif !important;
+    }}
+
+    /* إلغاء تداخل شريط Streamlit العلوي وحواشي الصفحة */
+    header[data-testid="stHeader"] {{
+        background: transparent !important;
+    }}
+    
+    .block-container {{
+        padding-top: 2rem !important;
+        padding-bottom: 2rem !important;
     }}
 
     .stApp {{
@@ -107,16 +117,14 @@ st.markdown(f"""
         text-align: {text_align} !important;
     }}
 
-    /* إصلاح تداخل العناوين الرئيسية والتبويبات */
     h1 {{
-        padding-top: 0.5rem !important;
-        padding-bottom: 1rem !important;
-        font-size: 1.8rem !important;
+        margin-top: 0px !important;
+        padding-top: 0px !important;
+        font-size: 1.7rem !important;
         font-weight: 800 !important;
         color: #f8fafc !important;
     }}
 
-    /* تنسيق الحقول والقوائم المنسدلة */
     input, textarea, select, 
     div[data-baseweb="select"] > div, 
     div[data-baseweb="base-input"] {{
@@ -153,7 +161,6 @@ st.markdown(f"""
         color: #38bdf8 !important;
     }}
 
-    /* صندوق رفع الملفات */
     div[data-testid="stFileUploader"] {{
         background-color: #0f172a !important;
         border: 2px dashed #3b82f6 !important;
@@ -171,7 +178,6 @@ st.markdown(f"""
         color: #f8fafc !important;
     }}
 
-    /* التبويبات (Tabs) */
     div.stTabs [data-baseweb="tab-list"] {{
         gap: 8px;
         background-color: rgba(15, 23, 42, 0.6);
@@ -212,7 +218,6 @@ st.markdown(f"""
         border-right: 1px solid #1e293b;
     }}
 
-    /* بطاقات المؤشرات KPI */
     div[data-testid="stMetric"] {{
         background: rgba(30, 41, 59, 0.85) !important;
         border: 1px solid #334155 !important;
@@ -233,7 +238,6 @@ st.markdown(f"""
         text-align: center !important;
     }}
 
-    /* الحاويات والنماذج */
     div[data-testid="stForm"], div.stTabs [data-baseweb="tab-panel"] {{
         background: rgba(30, 41, 59, 0.85) !important;
         border: 1px solid #334155 !important;
@@ -242,7 +246,6 @@ st.markdown(f"""
         margin-top: 10px !important;
     }}
 
-    /* الأزرار */
     .stButton > button, div[data-testid="stDownloadButton"] > button {{
         border-radius: 8px !important;
         font-weight: 700 !important;
@@ -288,7 +291,6 @@ c.execute('''CREATE TABLE IF NOT EXISTS settings (
 
 conn.commit()
 
-# دوال جلب إعدادات الشركة
 def get_setting(key, default=""):
     res = c.execute("SELECT value FROM settings WHERE key = ?", (key,)).fetchone()
     return res[0] if res else default
@@ -297,7 +299,6 @@ def save_setting(key, value):
     c.execute("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)", (key, value))
     conn.commit()
 
-# 5. جلب وحساب البيانات
 def get_inventory():
     df_prod = pd.read_sql_query("SELECT * FROM products", conn)
     df_trans = pd.read_sql_query("SELECT * FROM transactions", conn)
@@ -327,13 +328,11 @@ def to_excel(df):
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Sheet1')
-    processed_data = output.getvalue()
-    return processed_data
+    return output.getvalue()
 
-# 6. الواجهة الرئيسية
+# 5. الواجهة الرئيسية
 st.title(t["title"])
 
-# عرض معلومات الشركة المسجلة إن وجدت
 comp_name_val = get_setting("comp_name", "")
 comp_phone_val = get_setting("comp_phone", "")
 if comp_name_val:
@@ -383,13 +382,12 @@ with tab1:
             use_container_width=True, hide_index=True
         )
 
-# ==================== Tab 2: إدارة المنتجات (تعديل وتحديث فوري) ====================
+# ==================== Tab 2: إدارة المنتجات ====================
 with tab2:
     col_add, col_file = st.columns([2, 1])
     
     with col_add:
         st.subheader(t["add_edit_prod"])
-        
         edit_mode = st.checkbox(t["edit_mode_label"], value=False)
         
         selected_sku_to_edit = ""
@@ -539,7 +537,7 @@ with tab5:
     else:
         st.info(t["no_history"])
 
-# ==================== Tab 6: إعدادات الشركة والأرقام التعريفية ====================
+# ==================== Tab 6: إعدادات الشركة ====================
 with tab6:
     st.subheader(t["settings_title"])
     with st.form("settings_form"):
