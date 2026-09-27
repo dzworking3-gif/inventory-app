@@ -64,7 +64,7 @@ LANGUAGES = {
     }
 }
 
-# شريط جانبى لاختيار اللغة
+# شريط جانبي لاختيار اللغة
 st.sidebar.markdown("### 🌐 اختيار اللغة / Language / Langue")
 selected_lang = st.sidebar.selectbox("Language", ["العربية", "Français", "English"], label_visibility="collapsed")
 t = LANGUAGES[selected_lang]
@@ -73,6 +73,7 @@ t = LANGUAGES[selected_lang]
 direction = "rtl" if selected_lang == "العربية" else "ltr"
 text_align = "right" if selected_lang == "العربية" else "left"
 
+# 3. تنسيق CSS شامل لإجبار جميع الخانات، الحقول، والجداول على أن تصبح داكنة بالكامل
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
@@ -84,14 +85,45 @@ st.markdown(f"""
     }}
 
     .stApp {{
-        background: linear-gradient(135deg, rgba(15, 23, 42, 0.94), rgba(30, 41, 59, 0.96)), 
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.98)), 
                     url("https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=1920&auto=format&fit=crop") !important;
         background-attachment: fixed !important;
         background-size: cover !important;
         background-position: center !important;
-        color: #ffffff !important;
+        color: #f8fafc !important;
     }}
 
+    /* حقول الإدخال والأرقام والقوائم المنسدلة */
+    input, textarea, select, div[data-baseweb="select"] > div, div[data-baseweb="base-input"] {{
+        background-color: #0f172a !important;
+        color: #f8fafc !important;
+        border-color: #334155 !important;
+    }}
+
+    .stTextInput input, .stNumberInput input {{
+        background-color: #0f172a !important;
+        color: #f8fafc !important;
+        border: 1px solid #475569 !important;
+        border-radius: 8px !important;
+    }}
+
+    /* القوائم المنسدلة Selectbox الداخلية والخارجية */
+    div[data-baseweb="select"] div, div[data-baseweb="popover"] div, ul[data-baseweb="menu"] {{
+        background-color: #0f172a !important;
+        color: #f8fafc !important;
+    }}
+    
+    li[data-baseweb="option"] {{
+        background-color: #0f172a !important;
+        color: #f8fafc !important;
+    }}
+    
+    li[data-baseweb="option"]:hover {{
+        background-color: #1e293b !important;
+        color: #38bdf8 !important;
+    }}
+
+    /* خانة رفع الملفات File Uploader داكنة تماماً */
     section[data-testid="stFileUploader"] {{
         background-color: #1e293b !important;
         border: 2px dashed #3b82f6 !important;
@@ -100,13 +132,13 @@ st.markdown(f"""
     }}
 
     section[data-testid="stFileUploader"] * {{
-        color: #ffffff !important;
+        color: #f8fafc !important;
         background-color: transparent !important;
     }}
 
     section[data-testid="stFileUploader"] button {{
         background-color: #2563eb !important;
-        color: #ffffff !important;
+        color: #f8fafc !important;
         border-radius: 8px !important;
         border: none !important;
         padding: 6px 16px !important;
@@ -118,8 +150,13 @@ st.markdown(f"""
         border-radius: 8px !important;
     }}
 
+    /* التبويبات Tabs */
+    button[data-baseweb="tab"] {{
+        background-color: transparent !important;
+    }}
+    
     button[data-baseweb="tab"] p, button[data-baseweb="tab"] div, button[data-baseweb="tab"] span {{
-        color: #cbd5e1 !important;
+        color: #94a3b8 !important;
         font-weight: 700 !important;
         font-size: 1.1rem !important;
     }}
@@ -131,23 +168,20 @@ st.markdown(f"""
         font-weight: 800 !important;
     }}
 
+    /* النصوص والعناوين العامة */
     label, p, span, div, h1, h2, h3, h4, h5, h6 {{
-        color: #ffffff !important;
+        color: #f8fafc !important;
     }}
 
-    .stTextInput input, .stNumberInput input, div[data-baseweb="select"] {{
-        background-color: #0f172a !important;
-        color: #ffffff !important;
-        border: 1px solid #475569 !important;
-        border-radius: 8px !important;
-    }}
-
+    /* الشريط الجانبي */
     section[data-testid="stSidebar"] {{
-        background-color: rgba(15, 23, 42, 0.95) !important;
+        background-color: rgba(15, 23, 42, 0.98) !important;
+        border-right: 1px solid #1e293b;
     }}
 
+    /* بطاقات الإحصائيات KPIs */
     div[data-testid="stMetric"] {{
-        background: rgba(30, 41, 59, 0.9) !important;
+        background: rgba(30, 41, 59, 0.85) !important;
         border: 1px solid #334155 !important;
         padding: 16px !important;
         border-radius: 12px !important;
@@ -163,24 +197,31 @@ st.markdown(f"""
         font-weight: 800 !important;
     }}
 
+    /* إطارات الاستمارات والجداول */
     div[data-testid="stForm"], div.stTabs [data-baseweb="tab-panel"] {{
-        background: rgba(30, 41, 59, 0.9) !important;
+        background: rgba(30, 41, 59, 0.85) !important;
         border: 1px solid #334155 !important;
         border-radius: 12px !important;
         padding: 20px !important;
     }}
 
+    /* أزرار الإرسال والحفظ */
     .stButton > button {{
         border-radius: 8px !important;
         font-weight: 700 !important;
         background-color: #2563eb !important;
         color: #ffffff !important;
         border: none !important;
+        transition: 0.3s;
+    }}
+    
+    .stButton > button:hover {{
+        background-color: #1d4ed8 !important;
     }}
     </style>
 """, unsafe_allow_html=True)
 
-# 3. إنشاء قاعدة البيانات
+# 4. إنشاء قاعدة البيانات
 conn = sqlite3.connect('inventory_system.db', check_same_thread=False)
 c = conn.cursor()
 
@@ -203,7 +244,7 @@ c.execute('''CREATE TABLE IF NOT EXISTS transactions (
 
 conn.commit()
 
-# 4. دالة جلب وحساب بيانات المخزون
+# 5. دالة جلب وحساب بيانات المخزون
 def get_inventory():
     df_prod = pd.read_sql_query("SELECT * FROM products", conn)
     df_trans = pd.read_sql_query("SELECT * FROM transactions", conn)
@@ -229,7 +270,7 @@ def get_inventory():
     df_prod['status'] = df_prod.apply(get_status, axis=1)
     return df_prod
 
-# 5. الواجهة الرئيسية
+# 6. الواجهة الرئيسية
 st.title(t["title"])
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs(t["tabs"])
