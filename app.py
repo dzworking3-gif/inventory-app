@@ -8,64 +8,72 @@ except ImportError:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "openpyxl"])
 
 import streamlit as st
-import streamlit.components.v1 as components
 import pandas as pd
 import sqlite3
 import io
 from datetime import datetime
 
 # 1. إعداد الصفحة
-st.set_page_config(page_title="نظام إدارة المخزون والمتكامل", layout="wide", page_icon="📦")
+st.set_page_config(page_title="نظام إدارة المخزون والمبيعات المتكامل", layout="wide", page_icon="📦")
 
 # 2. القاموس الخاص باللغات
 LANGUAGES = {
     "العربية": {
         "title": "📦 نظام إدارة المخزون والمبيعات المتكامل",
-        "tabs": ["📊 لوحة التحكم", "📦 إدارة المنتجات", "🧾 المبيعات والفواتير", "📥 المشتريات والمدخلات", "📜 سجل الحركة والتقارير"],
+        "tabs": ["📊 لوحة التحكم", "📦 إدارة المنتجات", "🧾 المبيعات والفواتير", "📥 المشتريات والمدخلات", "📜 سجل الحركة والتقارير", "⚙️ إعدادات الشركة والأرقام"],
         "kpi1": "إجمالي أصناف المنتجات", "kpi2": "إجمالي القطع بالمخزن", "kpi3": "القيمة المالية الإجمالية", "kpi4": "منتجات تحت حد الطلب",
         "current_stock_title": "📋 حالة المخزون الحالية",
         "sku": "رقم المنتج (SKU)", "name": "اسم المنتج", "category": "الفئة", "stock": "المخزون المتبقي", "price": "السعر ($)", "total_val": "القيمة الإجمالية ($)", "status": "الحالة",
-        "add_edit_prod": "➕ إضافة / تعديل منتج", "initial_stock": "المخزون الأولي", "min_limit": "حد الطلب الأدنى", "btn_save_prod": "حفظ المنتج",
+        "add_edit_prod": "➕ إضافة أو تعديل منتج", "initial_stock": "المخزون الأولي", "min_limit": "حد الطلب الأدنى", "btn_save_prod": "حفظ / تحديث المنتج في النظام",
         "import_excel": "📥 استيراد من Excel", "file_uploader": "رفع ملف Excel",
         "sale_title": "🧾 تسجيل عملية بيع / مخرجات", "select_prod": "اختر المنتج", "qty_sold": "الكمية المباعة", "client_name": "اسم الزبون / الجهة",
         "stock_available": "المخزون المتاح حالياً", "btn_sell": "تسجيل البيع وإصدار الفاتورة", "err_qty": "الكمية المطلوبة أكبر من المخزون المتاح!",
         "buy_title": "📥 تسجيل عملية توريد / مدخلات جديدة", "select_prod_supply": "اختر المنتج لتزويده", "qty_received": "الكمية المستلمة", "supplier_name": "اسم المورد",
         "btn_buy": "إضافة للمخزون", "history_title": "📜 سجل حركة المخزون التاريخي (Ledger)", 
         "download_excel": "📥 تحميل ملف Excel للمخزون", "download_history_excel": "📥 تحميل سجل الحركات (Excel)",
-        "success_prod": "تم حفظ المنتج بنجاح في قاعدة البيانات!", "success_import": "تم استيراد البيانات بنجاح!", "success_sale": "تم تسجيل المبيعات بنجاح للزبون",
-        "success_buy": "تمت إضافة الكميات الجديدة للمخزون بنجاح!", "no_history": "لا توجد عمليات مسجلة في السجل بعد."
+        "success_prod": "تم حفظ / تحديث المنتج بنجاح في قاعدة البيانات!", "success_import": "تم استيراد البيانات بنجاح!", "success_sale": "تم تسجيل المبيعات بنجاح للزبون",
+        "success_buy": "تمت إضافة الكميات الجديدة للمخزون بنجاح!", "no_history": "لا توجد عمليات مسجلة في السجل بعد.",
+        "settings_title": "⚙️ إعدادات الشركة وبيانات التواصل والأرقام التعريفية",
+        "comp_name": "اسم المؤسسة / الشركة", "comp_phone": "رقم الهاتف / النقال", "comp_tax": "الرقم الضريبي / السجل التجاري", "comp_address": "العنوان",
+        "btn_save_settings": "حفظ الإعدادات التعريفية", "success_settings": "تم حفظ الإعدادات بنجاح!"
     },
     "Français": {
         "title": "📦 Système Intégré de Gestion des Stocks et des Ventes",
-        "tabs": ["📊 Tableau de Bord", "📦 Gestion des Produits", "🧾 Ventes & Factures", "📥 Achats & Entrées", "📜 Historique & Rapports"],
+        "tabs": ["📊 Tableau de Bord", "📦 Gestion des Produits", "🧾 Ventes & Factures", "📥 Achats & Entrées", "📜 Historique & Rapports", "⚙️ Paramètres & Numéros"],
         "kpi1": "Total des Produits", "kpi2": "Total Articles en Stock", "kpi3": "Valeur Totale", "kpi4": "Produits sous le Seuil",
         "current_stock_title": "📋 État Actuel du Stock",
         "sku": "Réf. Produit (SKU)", "name": "Nom du Produit", "category": "Catégorie", "stock": "Stock Restant", "price": "Prix ($)", "total_val": "Valeur Totale ($)", "status": "Statut",
-        "add_edit_prod": "➕ Ajouter / Modifier un Produit", "initial_stock": "Stock Initial", "min_limit": "Seuil d'Alerte", "btn_save_prod": "Enregistrer",
+        "add_edit_prod": "➕ Ajouter ou Modifier un Produit", "initial_stock": "Stock Initial", "min_limit": "Seuil d'Alerte", "btn_save_prod": "Enregistrer / Mettre à jour",
         "import_excel": "📥 Importer depuis Excel", "file_uploader": "Téléverser le fichier Excel",
         "sale_title": "🧾 Enregistrer une Vente / Sortie", "select_prod": "Sélectionner le Produit", "qty_sold": "Quantité Vendue", "client_name": "Nom du Client",
         "stock_available": "Stock Actuel Disponible", "btn_sell": "Enregistrer la Vente", "err_qty": "La quantité demandée dépasse le stock disponible !",
         "buy_title": "📥 Enregistrer un Réapprovisionnement", "select_prod_supply": "Produit à Réapprovisionner", "qty_received": "Quantité Reçue", "supplier_name": "Nom du Fournisseur",
         "btn_buy": "Ajouter au Stock", "history_title": "📜 Historique des Mouvements de Stock (Ledger)", 
         "download_excel": "📥 Télécharger le fichier Excel du stock", "download_history_excel": "📥 Télécharger l'historique (Excel)",
-        "success_prod": "Produit enregistré avec succès !", "success_import": "Données importées avec succès !", "success_sale": "Vente enregistrée avec succès pour le client",
-        "success_buy": "Quantités ajoutées au stock avec succès !", "no_history": "Aucun mouvement enregistré pour le moment."
+        "success_prod": "Produit enregistré / mis à jour avec succès !", "success_import": "Données importées avec succès !", "success_sale": "Vente enregistrée avec succès pour le client",
+        "success_buy": "Quantités ajoutées au stock avec succès !", "no_history": "Aucun mouvement enregistré pour le moment.",
+        "settings_title": "⚙️ Paramètres de l'Entreprise et Coordonnées",
+        "comp_name": "Nom de l'Entreprise", "comp_phone": "Numéro de Téléphone", "comp_tax": "Numéro Fiscal / Registre de Commerce", "comp_address": "Adresse",
+        "btn_save_settings": "Enregistrer les Paramètres", "success_settings": "Paramètres enregistrés avec succès !"
     },
     "English": {
         "title": "📦 Integrated Inventory & Sales Management System",
-        "tabs": ["📊 Dashboard", "📦 Product Management", "🧾 Sales & Invoices", "📥 Purchases & Inputs", "📜 History & Reports"],
+        "tabs": ["📊 Dashboard", "📦 Product Management", "🧾 Sales & Invoices", "📥 Purchases & Inputs", "📜 History & Reports", "⚙️ Company Settings"],
         "kpi1": "Total Product Items", "kpi2": "Total Pieces in Stock", "kpi3": "Total Financial Value", "kpi4": "Products Below Reorder Point",
         "current_stock_title": "📋 Current Inventory Status",
         "sku": "Product SKU", "name": "Product Name", "category": "Category", "stock": "Remaining Stock", "price": "Price ($)", "total_val": "Total Value ($)", "status": "Status",
-        "add_edit_prod": "📦 Add / Edit Product", "initial_stock": "Initial Stock", "min_limit": "Minimum Reorder Limit", "btn_save_prod": "Save Product",
+        "add_edit_prod": "📦 Add or Edit Product", "initial_stock": "Initial Stock", "min_limit": "Minimum Reorder Limit", "btn_save_prod": "Save / Update Product",
         "import_excel": "📥 Import from Excel", "file_uploader": "Upload Excel File",
         "sale_title": "🧾 Register Sale / Output", "select_prod": "Select Product", "qty_sold": "Sold Quantity", "client_name": "Client / Entity Name",
         "stock_available": "Current Available Stock", "btn_sell": "Register Sale & Issue Invoice", "err_qty": "Requested quantity exceeds available stock!",
         "buy_title": "📥 Register Supply / New Inputs", "select_prod_supply": "Select Product to Restock", "qty_received": "Received Quantity", "supplier_name": "Supplier Name",
         "btn_buy": "Add to Stock", "history_title": "📜 Historical Inventory Ledger", 
         "download_excel": "📥 Download Inventory Excel File", "download_history_excel": "📥 Download Ledger (Excel)",
-        "success_prod": "Product successfully saved to database!", "success_import": "Data successfully imported!", "success_sale": "Sale successfully registered for client",
-        "success_buy": "New quantities successfully added to stock!", "no_history": "No transactions recorded in the ledger yet."
+        "success_prod": "Product successfully saved / updated!", "success_import": "Data successfully imported!", "success_sale": "Sale successfully registered for client",
+        "success_buy": "New quantities successfully added to stock!", "no_history": "No transactions recorded in the ledger yet.",
+        "settings_title": "⚙️ Company Settings, Phone Numbers & Info",
+        "comp_name": "Company Name", "comp_phone": "Phone Number", "comp_tax": "Tax ID / Commercial Register", "comp_address": "Address",
+        "btn_save_settings": "Save Settings", "success_settings": "Settings successfully saved!"
     }
 }
 
@@ -75,7 +83,7 @@ t = LANGUAGES[selected_lang]
 direction = "rtl" if selected_lang == "العربية" else "ltr"
 text_align = "right" if selected_lang == "العربية" else "left"
 
-# 3. تنسيق CSS مُحسّن لمعالجة خلفية رفع الملفات بشكل كامل وجذري
+# 3. تنسيق CSS مُحسّن
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
@@ -128,7 +136,6 @@ st.markdown(f"""
         color: #38bdf8 !important;
     }}
 
-    /* إصلاح شامل لخلفية رفع الملفات لجعلها داكنة بالكامل ومتناسقة */
     div[data-testid="stFileUploader"] {{
         background-color: #0f172a !important;
         border: 2px dashed #3b82f6 !important;
@@ -154,10 +161,6 @@ st.markdown(f"""
         font-weight: bold !important;
     }}
 
-    div[data-testid="stFileUploader"] button:hover {{
-        background-color: #1d4ed8 !important;
-    }}
-
     button[data-baseweb="tab"] {{
         background-color: transparent !important;
     }}
@@ -165,7 +168,7 @@ st.markdown(f"""
     button[data-baseweb="tab"] p, button[data-baseweb="tab"] div, button[data-baseweb="tab"] span {{
         color: #94a3b8 !important;
         font-weight: 700 !important;
-        font-size: 1.1rem !important;
+        font-size: 1.05rem !important;
     }}
     
     button[data-baseweb="tab"][aria-selected="true"] p, 
@@ -226,7 +229,7 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 4. قاعدة البيانات
+# 4. قاعدة البيانات (إعداد الجداول)
 conn = sqlite3.connect('inventory_system.db', check_same_thread=False)
 c = conn.cursor()
 
@@ -247,7 +250,20 @@ c.execute('''CREATE TABLE IF NOT EXISTS transactions (
                 party_name TEXT,
                 date TEXT)''')
 
+c.execute('''CREATE TABLE IF NOT EXISTS settings (
+                key TEXT PRIMARY KEY,
+                value TEXT)''')
+
 conn.commit()
+
+# دوال جلب إعدادات الشركة
+def get_setting(key, default=""):
+    res = c.execute("SELECT value FROM settings WHERE key = ?", (key,)).fetchone()
+    return res[0] if res else default
+
+def save_setting(key, value):
+    c.execute("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)", (key, value))
+    conn.commit()
 
 # 5. جلب وحساب البيانات
 def get_inventory():
@@ -267,7 +283,7 @@ def get_inventory():
     
     def get_status(row):
         if row['stock'] <= 0:
-            return '🔴 النفاد / Out'
+            return '🔴 نفد / Out'
         elif row['stock'] <= row['min_limit']:
             return '🟡 منخفض / Low'
         return '🟢 متوفر / OK'
@@ -285,7 +301,13 @@ def to_excel(df):
 # 6. الواجهة الرئيسية
 st.title(t["title"])
 
-tab1, tab2, tab3, tab4, tab5 = st.tabs(t["tabs"])
+# عرض معلومات الشركة المسجلة في أعلى الشاشة بشكل أنيق إن وجدت
+comp_name_val = get_setting("comp_name", "")
+comp_phone_val = get_setting("comp_phone", "")
+if comp_name_val:
+    st.caption(f"🏢 **{comp_name_val}** | 📞 {comp_phone_val}")
+
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(t["tabs"])
 df_inv = get_inventory()
 
 # ==================== Tab 1: لوحة التحكم ====================
@@ -322,24 +344,44 @@ with tab1:
             df_inv[['sku', 'name', 'category', 'stock', 'price', 'total_value', 'status']],
             column_config={
                 "sku": t["sku"], "name": t["name"], "category": t["category"],
-                "stock": t["stock"], "price": t["price"], "total_value": t["total_val"], "status": t["status"]
+                "stock": st.column_config.NumberColumn(format="%.0f"), 
+                "price": st.column_config.NumberColumn(format="$%.2f"), 
+                "total_value": st.column_config.NumberColumn(format="$%.2f"), 
+                "status": t["status"]
             },
             use_container_width=True, hide_index=True
         )
 
-# ==================== Tab 2: إدارة المنتجات ====================
+# ==================== Tab 2: إدارة المنتجات (مع التعديل والتحديث الفوري للأرقام) ====================
 with tab2:
     col_add, col_file = st.columns([2, 1])
     
     with col_add:
         st.subheader(t["add_edit_prod"])
+        
+        # اختيار منتج للتعديل السريع أو إضافة منتج جديد
+        edit_mode = st.checkbox("تعديل منتج موجود مسبقاً؟ / Modifier un produit existant?", value=False)
+        
+        selected_sku_to_edit = ""
+        default_name, default_cat, default_init, default_price, default_min = "", "General / عام", 0.0, 0.0, 5.0
+        
+        if edit_mode and not df_inv.empty:
+            chosen_p = st.selectbox("اختر المنتج لتعديل أرقامه:", df_inv['sku'] + " - " + df_inv['name'])
+            selected_sku_to_edit = chosen_p.split(" - ")[0]
+            prod_row = df_inv[df_inv['sku'] == selected_sku_to_edit].iloc[0]
+            default_name = prod_row['name']
+            default_cat = prod_row['category']
+            default_init = float(prod_row['initial_stock'])
+            default_price = float(prod_row['price'])
+            default_min = float(prod_row['min_limit'])
+
         with st.form("product_form"):
-            p_sku = st.text_input(t["sku"])
-            p_name = st.text_input(t["name"])
-            p_cat = st.selectbox(t["category"], ["General / عام", "Electronics / إلكترونيات", "Parts / قطع غيار", "Furniture / أثاث"])
-            p_init = st.number_input(t["initial_stock"], min_value=0.0, value=0.0)
-            p_price = st.number_input(t["price"], min_value=0.0, value=0.0)
-            p_min = st.number_input(t["min_limit"], min_value=0.0, value=5.0)
+            p_sku = st.text_input(t["sku"], value=selected_sku_to_edit if edit_mode else "")
+            p_name = st.text_input(t["name"], value=default_name)
+            p_cat = st.selectbox(t["category"], ["General / عام", "Electronics / إلكترونيات", "Parts / قطع غيار", "Furniture / أثاث"], index=0)
+            p_init = st.number_input(t["initial_stock"], min_value=0.0, value=default_init, step=1.0)
+            p_price = st.number_input(t["price"], min_value=0.0, value=default_price, step=0.5)
+            p_min = st.number_input(t["min_limit"], min_value=0.0, value=default_min, step=1.0)
             
             btn_save = st.form_submit_button(t["btn_save_prod"])
             if btn_save and p_sku and p_name:
@@ -347,6 +389,7 @@ with tab2:
                            VALUES (?, ?, ?, ?, ?, ?)
                            ON CONFLICT(sku) DO UPDATE SET
                            name=excluded.name, category=excluded.category,
+                           initial_stock=excluded.initial_stock,
                            price=excluded.price, min_limit=excluded.min_limit''',
                           (p_sku, p_name, p_cat, p_init, p_price, p_min))
                 conn.commit()
@@ -383,6 +426,7 @@ with tab2:
                                      VALUES (?, ?, ?, ?, ?, ?) 
                                      ON CONFLICT(sku) DO UPDATE SET
                                      name=excluded.name, category=excluded.category,
+                                     initial_stock=excluded.initial_stock,
                                      price=excluded.price, min_limit=excluded.min_limit''',
                                   (sku_val, name_val, cat_val, init_val, price_val, min_val))
                 conn.commit()
@@ -401,10 +445,10 @@ with tab3:
             sku_code = selected_sku.split(" - ")[0]
             current_p = df_inv[df_inv['sku'] == sku_code].iloc[0]
             
-            qty_out = col_s2.number_input(t["qty_sold"], min_value=1.0, value=1.0)
+            qty_out = col_s2.number_input(t["qty_sold"], min_value=1.0, value=1.0, step=1.0)
             client_name = col_s3.text_input(t["client_name"], value="General Client")
             
-            st.info(f"{t['stock_available']}: {current_p['stock']} | {t['price']}: ${current_p['price']}")
+            st.info(f"{t['stock_available']}: {current_p['stock']} | {t['price']}: ${current_p['price']:,.2f}")
             
             btn_sell = st.form_submit_button(t["btn_sell"])
             if btn_sell:
@@ -427,7 +471,7 @@ with tab4:
             selected_b_sku = col_b1.selectbox(t["select_prod_supply"], df_inv['sku'] + " - " + df_inv['name'])
             b_sku_code = selected_b_sku.split(" - ")[0]
             
-            qty_in = col_b2.number_input(t["qty_received"], min_value=1.0, value=1.0)
+            qty_in = col_b2.number_input(t["qty_received"], min_value=1.0, value=1.0, step=1.0)
             supplier_name = col_b3.text_input(t["supplier_name"], value="General Supplier")
             
             btn_buy = st.form_submit_button(t["btn_buy"])
@@ -464,3 +508,21 @@ with tab5:
         )
     else:
         st.info(t["no_history"])
+
+# ==================== Tab 6: إعدادات الشركة والأرقام التعريفية ====================
+with tab6:
+    st.subheader(t["settings_title"])
+    with st.form("settings_form"):
+        s_name = st.text_input(t["comp_name"], value=get_setting("comp_name", ""))
+        s_phone = st.text_input(t["comp_phone"], value=get_setting("comp_phone", ""))
+        s_tax = st.text_input(t["comp_tax"], value=get_setting("comp_tax", ""))
+        s_address = st.text_area(t["comp_address"], value=get_setting("comp_address", ""))
+        
+        btn_save_sets = st.form_submit_button(t["btn_save_settings"])
+        if btn_save_sets:
+            save_setting("comp_name", s_name)
+            save_setting("comp_phone", s_phone)
+            save_setting("comp_tax", s_tax)
+            save_setting("comp_address", s_address)
+            st.success(t["success_settings"])
+            st.rerun()
