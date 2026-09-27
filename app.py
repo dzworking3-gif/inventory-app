@@ -1,14 +1,3 @@
-import streamlit as st
-import pandas as pd
-import sqlite3
-from datetime import datetime
-import io
-import openpyxl
-from reportlab.lib.pagesizes import A4
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib import colors
-
 # 1. إعداد الصفحة
 st.set_page_config(page_title="نظام إدارة المخزون والمبيعات المتكامل", layout="wide", page_icon="📦")
 
