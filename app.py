@@ -17,7 +17,7 @@ from datetime import datetime
 # 1. إعداد الصفحة
 st.set_page_config(page_title="نظام إدارة المخزون والمتكامل", layout="wide", page_icon="📦")
 
-# 2. القاموس الخاص باللغات (العربية، الفرنسية، الإنجليزية)
+# 2. القاموس الخاص باللغات
 LANGUAGES = {
     "العربية": {
         "title": "📦 نظام إدارة المخزون والمبيعات المتكامل",
@@ -57,7 +57,7 @@ LANGUAGES = {
         "kpi1": "Total Product Items", "kpi2": "Total Pieces in Stock", "kpi3": "Total Financial Value", "kpi4": "Products Below Reorder Point",
         "current_stock_title": "📋 Current Inventory Status",
         "sku": "Product SKU", "name": "Product Name", "category": "Category", "stock": "Remaining Stock", "price": "Price ($)", "total_val": "Total Value ($)", "status": "Status",
-        "add_edit_prod": "➕ Add / Edit Product", "initial_stock": "Initial Stock", "min_limit": "Minimum Reorder Limit", "btn_save_prod": "Save Product",
+        "add_edit_prod": "📦 Add / Edit Product", "initial_stock": "Initial Stock", "min_limit": "Minimum Reorder Limit", "btn_save_prod": "Save Product",
         "import_excel": "📥 Import from Excel", "file_uploader": "Upload Excel File",
         "sale_title": "🧾 Register Sale / Output", "select_prod": "Select Product", "qty_sold": "Sold Quantity", "client_name": "Client / Entity Name",
         "stock_available": "Current Available Stock", "btn_sell": "Register Sale & Issue Invoice", "err_qty": "Requested quantity exceeds available stock!",
@@ -69,14 +69,13 @@ LANGUAGES = {
     }
 }
 
-# شريط جانبي لاختيار اللغة
 selected_lang = st.sidebar.selectbox("Language", ["العربية", "Français", "English"], label_visibility="collapsed")
 t = LANGUAGES[selected_lang]
 
 direction = "rtl" if selected_lang == "العربية" else "ltr"
 text_align = "right" if selected_lang == "العربية" else "left"
 
-# 3. حقن تنسيق CSS شامل (تعديل الأزرار وعزل أزرار التحميل لتظهر بنفس الشكل البارز)
+# 3. تنسيق CSS مُحسّن لمعالجة خلفية رفع الملفات بشكل كامل وجذري
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
@@ -129,16 +128,34 @@ st.markdown(f"""
         color: #38bdf8 !important;
     }}
 
-    section[data-testid="stFileUploader"] {{
-        background-color: #1e293b !important;
+    /* إصلاح شامل لخلفية رفع الملفات لجعلها داكنة بالكامل ومتناسقة */
+    div[data-testid="stFileUploader"] {{
+        background-color: #0f172a !important;
         border: 2px dashed #3b82f6 !important;
         border-radius: 12px !important;
-        padding: 15px !important;
+        padding: 20px !important;
     }}
 
-    section[data-testid="stFileUploader"] * {{
+    div[data-testid="stFileUploader"] section, 
+    div[data-testid="stFileUploader"] div, 
+    div[data-testid="stFileUploader"] span, 
+    div[data-testid="stFileUploader"] small,
+    div[data-testid="stFileUploaderDropzone"] {{
+        background-color: #0f172a !important;
         color: #f8fafc !important;
-        background-color: transparent !important;
+    }}
+
+    div[data-testid="stFileUploader"] button {{
+        background-color: #2563eb !important;
+        color: #ffffff !important;
+        border-radius: 8px !important;
+        border: none !important;
+        padding: 8px 16px !important;
+        font-weight: bold !important;
+    }}
+
+    div[data-testid="stFileUploader"] button:hover {{
+        background-color: #1d4ed8 !important;
     }}
 
     button[data-baseweb="tab"] {{
@@ -191,7 +208,6 @@ st.markdown(f"""
         padding: 20px !important;
     }}
 
-    /* تنسيق موحد لجميع الأزرار (بما فيها أزرار التحميل Download Buttons) لتظهر بوضوح تام */
     .stButton > button, div[data-testid="stDownloadButton"] > button {{
         border-radius: 8px !important;
         font-weight: 700 !important;
