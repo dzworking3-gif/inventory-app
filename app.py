@@ -35,12 +35,13 @@ LANGUAGES = {
         "success_buy": "تمت إضافة الكميات الجديدة للمخزون بنجاح!", "no_history": "لا توجد عمليات مسجلة في السجل بعد.",
         "settings_title": "⚙️ إعدادات الشركة وبيانات التواصل والأرقام التعريفية",
         "comp_name": "اسم المؤسسة / الشركة", "comp_phone": "رقم الهاتف / النقال", "comp_tax": "الرقم الضريبي / السجل التجاري", "comp_address": "العنوان",
-        "btn_save_settings": "حفظ الإعدادات التعريفية", "success_settings": "تم حفظ الإعدادات بنجاح!"
+        "btn_save_settings": "حفظ الإعدادات التعريفية", "success_settings": "تم حفظ الإعدادات بنجاح!",
+        "edit_mode_label": "تعديل منتج موجود مسبقاً؟"
     },
     "Français": {
-        "title": "📦 Système Intégré de Gestion des Stocks et des Ventes",
-        "tabs": ["📊 Tableau de Bord", "📦 Gestion des Produits", "🧾 Ventes & Factures", "📥 Achats & Entrées", "📜 Historique & Rapports", "⚙️ Paramètres & Numéros"],
-        "kpi1": "Total des Produits", "kpi2": "Total Articles en Stock", "kpi3": "Valeur Totale", "kpi4": "Produits sous le Seuil",
+        "title": "📦 Système de Gestion des Stocks et des Ventes",
+        "tabs": ["📊 Tableau de Bord", "📦 Gestion des Produits", "🧾 Ventes & Factures", "📥 Achats & Entrées", "📜 Historique & Rapports", "⚙️ Paramètres"],
+        "kpi1": "Total des Produits", "kpi2": "Articles en Stock", "kpi3": "Valeur Totale", "kpi4": "Produits sous Seuil",
         "current_stock_title": "📋 État Actuel du Stock",
         "sku": "Réf. Produit (SKU)", "name": "Nom du Produit", "category": "Catégorie", "stock": "Stock Restant", "price": "Prix ($)", "total_val": "Valeur Totale ($)", "status": "Statut",
         "add_edit_prod": "➕ Ajouter ou Modifier un Produit", "initial_stock": "Stock Initial", "min_limit": "Seuil d'Alerte", "btn_save_prod": "Enregistrer / Mettre à jour",
@@ -48,50 +49,51 @@ LANGUAGES = {
         "sale_title": "🧾 Enregistrer une Vente / Sortie", "select_prod": "Sélectionner le Produit", "qty_sold": "Quantité Vendue", "client_name": "Nom du Client",
         "stock_available": "Stock Actuel Disponible", "btn_sell": "Enregistrer la Vente", "err_qty": "La quantité demandée dépasse le stock disponible !",
         "buy_title": "📥 Enregistrer un Réapprovisionnement", "select_prod_supply": "Produit à Réapprovisionner", "qty_received": "Quantité Reçue", "supplier_name": "Nom du Fournisseur",
-        "btn_buy": "Ajouter au Stock", "history_title": "📜 Historique des Mouvements de Stock (Ledger)", 
-        "download_excel": "📥 Télécharger le fichier Excel du stock", "download_history_excel": "📥 Télécharger l'historique (Excel)",
+        "btn_buy": "Ajouter au Stock", "history_title": "📜 Historique des Mouvements de Stock", 
+        "download_excel": "📥 Télécharger le fichier Excel du stock", "download_history_excel": "📥 Télécharger l'historique",
         "success_prod": "Produit enregistré / mis à jour avec succès !", "success_import": "Données importées avec succès !", "success_sale": "Vente enregistrée avec succès pour le client",
         "success_buy": "Quantités ajoutées au stock avec succès !", "no_history": "Aucun mouvement enregistré pour le moment.",
         "settings_title": "⚙️ Paramètres de l'Entreprise et Coordonnées",
-        "comp_name": "Nom de l'Entreprise", "comp_phone": "Numéro de Téléphone", "comp_tax": "Numéro Fiscal / Registre de Commerce", "comp_address": "Adresse",
-        "btn_save_settings": "Enregistrer les Paramètres", "success_settings": "Paramètres enregistrés avec succès !"
+        "comp_name": "Nom de l'Entreprise", "comp_phone": "Numéro de Téléphone", "comp_tax": "Numéro Fiscal / Registre", "comp_address": "Adresse",
+        "btn_save_settings": "Enregistrer les Paramètres", "success_settings": "Paramètres enregistrés avec succès !",
+        "edit_mode_label": "Modifier un produit existant ?"
     },
     "English": {
-        "title": "📦 Integrated Inventory & Sales Management System",
-        "tabs": ["📊 Dashboard", "📦 Product Management", "🧾 Sales & Invoices", "📥 Purchases & Inputs", "📜 History & Reports", "⚙️ Company Settings"],
-        "kpi1": "Total Product Items", "kpi2": "Total Pieces in Stock", "kpi3": "Total Financial Value", "kpi4": "Products Below Reorder Point",
+        "title": "📦 Integrated Inventory & Sales System",
+        "tabs": ["📊 Dashboard", "📦 Products", "🧾 Sales & Invoices", "📥 Purchases", "📜 History & Reports", "⚙️ Settings"],
+        "kpi1": "Total Products", "kpi2": "Pieces in Stock", "kpi3": "Total Value", "kpi4": "Low Stock Products",
         "current_stock_title": "📋 Current Inventory Status",
         "sku": "Product SKU", "name": "Product Name", "category": "Category", "stock": "Remaining Stock", "price": "Price ($)", "total_val": "Total Value ($)", "status": "Status",
-        "add_edit_prod": "📦 Add or Edit Product", "initial_stock": "Initial Stock", "min_limit": "Minimum Reorder Limit", "btn_save_prod": "Save / Update Product",
+        "add_edit_prod": "📦 Add or Edit Product", "initial_stock": "Initial Stock", "min_limit": "Minimum Limit", "btn_save_prod": "Save / Update Product",
         "import_excel": "📥 Import from Excel", "file_uploader": "Upload Excel File",
-        "sale_title": "🧾 Register Sale / Output", "select_prod": "Select Product", "qty_sold": "Sold Quantity", "client_name": "Client / Entity Name",
-        "stock_available": "Current Available Stock", "btn_sell": "Register Sale & Issue Invoice", "err_qty": "Requested quantity exceeds available stock!",
+        "sale_title": "🧾 Register Sale / Output", "select_prod": "Select Product", "qty_sold": "Sold Quantity", "client_name": "Client Name",
+        "stock_available": "Current Available Stock", "btn_sell": "Register Sale", "err_qty": "Requested quantity exceeds available stock!",
         "buy_title": "📥 Register Supply / New Inputs", "select_prod_supply": "Select Product to Restock", "qty_received": "Received Quantity", "supplier_name": "Supplier Name",
         "btn_buy": "Add to Stock", "history_title": "📜 Historical Inventory Ledger", 
-        "download_excel": "📥 Download Inventory Excel File", "download_history_excel": "📥 Download Ledger (Excel)",
+        "download_excel": "📥 Download Excel File", "download_history_excel": "📥 Download Ledger",
         "success_prod": "Product successfully saved / updated!", "success_import": "Data successfully imported!", "success_sale": "Sale successfully registered for client",
-        "success_buy": "New quantities successfully added to stock!", "no_history": "No transactions recorded in the ledger yet.",
-        "settings_title": "⚙️ Company Settings, Phone Numbers & Info",
-        "comp_name": "Company Name", "comp_phone": "Phone Number", "comp_tax": "Tax ID / Commercial Register", "comp_address": "Address",
-        "btn_save_settings": "Save Settings", "success_settings": "Settings successfully saved!"
+        "success_buy": "New quantities successfully added to stock!", "no_history": "No transactions recorded yet.",
+        "settings_title": "⚙️ Company Settings & Info",
+        "comp_name": "Company Name", "comp_phone": "Phone Number", "comp_tax": "Tax ID / Register", "comp_address": "Address",
+        "btn_save_settings": "Save Settings", "success_settings": "Settings successfully saved!",
+        "edit_mode_label": "Edit existing product?"
     }
 }
 
-selected_lang = st.sidebar.selectbox("Language", ["العربية", "Français", "English"], label_visibility="collapsed")
+selected_lang = st.sidebar.selectbox("Language / Langue", ["العربية", "Français", "English"], label_visibility="collapsed")
 t = LANGUAGES[selected_lang]
 
+# تحديد الاتجاه تلقائياً (RTL للعربية، LTR للفرنسية والإنجليزية)
 direction = "rtl" if selected_lang == "العربية" else "ltr"
 text_align = "right" if selected_lang == "العربية" else "left"
 
-# 3. تنسيق CSS مُحسّن
+# 3. تنسيق CSS مُحسّن ومضبوط لمنع التداخلات تماماً
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
 
     * {{
         font-family: 'Tajawal', sans-serif !important;
-        direction: {direction};
-        text-align: {text_align};
     }}
 
     .stApp {{
@@ -101,14 +103,27 @@ st.markdown(f"""
         background-size: cover !important;
         background-position: center !important;
         color: #f8fafc !important;
+        direction: {direction} !important;
+        text-align: {text_align} !important;
     }}
 
+    /* إصلاح تداخل العناوين الرئيسية والتبويبات */
+    h1 {{
+        padding-top: 0.5rem !important;
+        padding-bottom: 1rem !important;
+        font-size: 1.8rem !important;
+        font-weight: 800 !important;
+        color: #f8fafc !important;
+    }}
+
+    /* تنسيق الحقول والقوائم المنسدلة */
     input, textarea, select, 
     div[data-baseweb="select"] > div, 
     div[data-baseweb="base-input"] {{
         background-color: #0f172a !important;
         color: #f8fafc !important;
         border-color: #334155 !important;
+        text-align: {text_align} !important;
     }}
 
     div[data-baseweb="popover"], 
@@ -118,6 +133,7 @@ st.markdown(f"""
     ul[role="listbox"] {{
         background-color: #0f172a !important;
         color: #f8fafc !important;
+        text-align: {text_align} !important;
     }}
 
     li[data-baseweb="option"], 
@@ -126,6 +142,7 @@ st.markdown(f"""
     li[role="option"] {{
         background-color: #0f172a !important;
         color: #f8fafc !important;
+        text-align: {text_align} !important;
     }}
 
     li[data-baseweb="option"]:hover, 
@@ -136,11 +153,13 @@ st.markdown(f"""
         color: #38bdf8 !important;
     }}
 
+    /* صندوق رفع الملفات */
     div[data-testid="stFileUploader"] {{
         background-color: #0f172a !important;
         border: 2px dashed #3b82f6 !important;
         border-radius: 12px !important;
         padding: 20px !important;
+        text-align: center !important;
     }}
 
     div[data-testid="stFileUploader"] section, 
@@ -152,34 +171,40 @@ st.markdown(f"""
         color: #f8fafc !important;
     }}
 
-    div[data-testid="stFileUploader"] button {{
-        background-color: #2563eb !important;
-        color: #ffffff !important;
-        border-radius: 8px !important;
-        border: none !important;
-        padding: 8px 16px !important;
-        font-weight: bold !important;
+    /* التبويبات (Tabs) */
+    div.stTabs [data-baseweb="tab-list"] {{
+        gap: 8px;
+        background-color: rgba(15, 23, 42, 0.6);
+        padding: 6px;
+        border-radius: 10px;
     }}
 
     button[data-baseweb="tab"] {{
         background-color: transparent !important;
+        border-radius: 8px !important;
+        padding: 8px 16px !important;
     }}
     
     button[data-baseweb="tab"] p, button[data-baseweb="tab"] div, button[data-baseweb="tab"] span {{
         color: #94a3b8 !important;
         font-weight: 700 !important;
-        font-size: 1.05rem !important;
+        font-size: 0.95rem !important;
     }}
     
+    button[data-baseweb="tab"][aria-selected="true"] {{
+        background-color: #2563eb !important;
+    }}
+
     button[data-baseweb="tab"][aria-selected="true"] p, 
     button[data-baseweb="tab"][aria-selected="true"] div, 
     button[data-baseweb="tab"][aria-selected="true"] span {{
-        color: #38bdf8 !important;
+        color: #ffffff !important;
         font-weight: 800 !important;
     }}
 
-    label, p, span, div, h1, h2, h3, h4, h5, h6 {{
+    label, p, span, div, h2, h3, h4, h5, h6 {{
         color: #f8fafc !important;
+        text-align: {text_align} !important;
     }}
 
     section[data-testid="stSidebar"] {{
@@ -187,30 +212,37 @@ st.markdown(f"""
         border-right: 1px solid #1e293b;
     }}
 
+    /* بطاقات المؤشرات KPI */
     div[data-testid="stMetric"] {{
         background: rgba(30, 41, 59, 0.85) !important;
         border: 1px solid #334155 !important;
         padding: 16px !important;
         border-radius: 12px !important;
+        text-align: center !important;
     }}
 
     div[data-testid="stMetricLabel"] p {{
         color: #94a3b8 !important;
-        font-size: 1rem !important;
+        font-size: 0.95rem !important;
+        text-align: center !important;
     }}
 
     div[data-testid="stMetricValue"] div {{
         color: #38bdf8 !important;
         font-weight: 800 !important;
+        text-align: center !important;
     }}
 
+    /* الحاويات والنماذج */
     div[data-testid="stForm"], div.stTabs [data-baseweb="tab-panel"] {{
         background: rgba(30, 41, 59, 0.85) !important;
         border: 1px solid #334155 !important;
         border-radius: 12px !important;
-        padding: 20px !important;
+        padding: 24px !important;
+        margin-top: 10px !important;
     }}
 
+    /* الأزرار */
     .stButton > button, div[data-testid="stDownloadButton"] > button {{
         border-radius: 8px !important;
         font-weight: 700 !important;
@@ -218,7 +250,7 @@ st.markdown(f"""
         color: #ffffff !important;
         border: none !important;
         width: 100% !important;
-        padding: 0.5rem 1rem !important;
+        padding: 0.6rem 1rem !important;
         transition: 0.3s;
     }}
     
@@ -301,7 +333,7 @@ def to_excel(df):
 # 6. الواجهة الرئيسية
 st.title(t["title"])
 
-# عرض معلومات الشركة المسجلة في أعلى الشاشة بشكل أنيق إن وجدت
+# عرض معلومات الشركة المسجلة إن وجدت
 comp_name_val = get_setting("comp_name", "")
 comp_phone_val = get_setting("comp_phone", "")
 if comp_name_val:
@@ -312,7 +344,6 @@ df_inv = get_inventory()
 
 # ==================== Tab 1: لوحة التحكم ====================
 with tab1:
-    st.subheader(t["tabs"][0])
     c1, c2, c3, c4 = st.columns(4)
     
     total_items = len(df_inv)
@@ -325,7 +356,7 @@ with tab1:
     c3.metric(t["kpi3"], f"${total_val:,.2f}")
     c4.metric(t["kpi4"], f"{low_stock}")
     
-    st.divider()
+    st.markdown("<br>", unsafe_allow_html=True)
     
     col_title, col_btn = st.columns([3, 1])
     col_title.subheader(t["current_stock_title"])
@@ -352,21 +383,20 @@ with tab1:
             use_container_width=True, hide_index=True
         )
 
-# ==================== Tab 2: إدارة المنتجات (مع التعديل والتحديث الفوري للأرقام) ====================
+# ==================== Tab 2: إدارة المنتجات (تعديل وتحديث فوري) ====================
 with tab2:
     col_add, col_file = st.columns([2, 1])
     
     with col_add:
         st.subheader(t["add_edit_prod"])
         
-        # اختيار منتج للتعديل السريع أو إضافة منتج جديد
-        edit_mode = st.checkbox("تعديل منتج موجود مسبقاً؟ / Modifier un produit existant?", value=False)
+        edit_mode = st.checkbox(t["edit_mode_label"], value=False)
         
         selected_sku_to_edit = ""
-        default_name, default_cat, default_init, default_price, default_min = "", "General / عام", 0.0, 0.0, 5.0
+        default_name, default_cat, default_init, default_price, default_min = "", "General", 0.0, 0.0, 5.0
         
         if edit_mode and not df_inv.empty:
-            chosen_p = st.selectbox("اختر المنتج لتعديل أرقامه:", df_inv['sku'] + " - " + df_inv['name'])
+            chosen_p = st.selectbox("---", df_inv['sku'] + " - " + df_inv['name'], label_visibility="collapsed")
             selected_sku_to_edit = chosen_p.split(" - ")[0]
             prod_row = df_inv[df_inv['sku'] == selected_sku_to_edit].iloc[0]
             default_name = prod_row['name']
@@ -378,7 +408,7 @@ with tab2:
         with st.form("product_form"):
             p_sku = st.text_input(t["sku"], value=selected_sku_to_edit if edit_mode else "")
             p_name = st.text_input(t["name"], value=default_name)
-            p_cat = st.selectbox(t["category"], ["General / عام", "Electronics / إلكترونيات", "Parts / قطع غيار", "Furniture / أثاث"], index=0)
+            p_cat = st.selectbox(t["category"], ["General", "Electronics", "Parts", "Furniture"], index=0)
             p_init = st.number_input(t["initial_stock"], min_value=0.0, value=default_init, step=1.0)
             p_price = st.number_input(t["price"], min_value=0.0, value=default_price, step=0.5)
             p_min = st.number_input(t["min_limit"], min_value=0.0, value=default_min, step=1.0)
@@ -398,7 +428,7 @@ with tab2:
 
     with col_file:
         st.subheader(t["import_excel"])
-        up_file = st.file_uploader(t["file_uploader"], type=["xlsx", "csv"])
+        up_file = st.file_uploader(t["file_uploader"], type=["xlsx", "csv"], label_visibility="collapsed")
         if up_file:
             try:
                 df_up = pd.read_csv(up_file) if up_file.name.endswith('.csv') else pd.read_excel(up_file)
