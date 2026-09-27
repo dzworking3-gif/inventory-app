@@ -8,6 +8,7 @@ except ImportError:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "openpyxl"])
 
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 import sqlite3
 from datetime import datetime
@@ -69,11 +70,11 @@ st.sidebar.markdown("### 🌐 اختيار اللغة / Language / Langue")
 selected_lang = st.sidebar.selectbox("Language", ["العربية", "Français", "English"], label_visibility="collapsed")
 t = LANGUAGES[selected_lang]
 
-# اتجاه الصفحة بناءً على اللغة (RTL للعربية، LTR للفرنسية والإنجليزية)
+# اتجاه الصفحة بناءً على اللغة
 direction = "rtl" if selected_lang == "العربية" else "ltr"
 text_align = "right" if selected_lang == "العربية" else "left"
 
-# 3. تنسيق CSS شامل لإجبار القوائم المنسدلة وخانات اختيار اللغة على أن تصبح داكنة بالكامل
+# 3. حقن كود CSS شامل + JavaScript مباشر لإجبار القوائم المنسدلة والـ Popovers على أن تصبح داكنة
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
@@ -93,7 +94,7 @@ st.markdown(f"""
         color: #f8fafc !important;
     }}
 
-    /* إجبار حقول الإدخال والقوائم المنسدلة على اللون الداكن */
+    /* إجبار كل العناصر المدخلة على الظهور بشكل داكن */
     input, textarea, select, 
     div[data-baseweb="select"] > div, 
     div[data-baseweb="base-input"] {{
@@ -102,33 +103,35 @@ st.markdown(f"""
         border-color: #334155 !important;
     }}
 
-    /* استهداف القوائم المنبثقة والخارجية (Popovers & Menus) التي تظهر عند النقر على القوائم المنسدلة */
-    div[data-baseweb="popover"],
-    div[data-baseweb="menu"],
+    /* استهداف جميع قوائم الـ Select والخيارات والـ Popovers المنبثقة من الجذر */
+    div[data-baseweb="popover"], 
+    div[data-baseweb="menu"], 
     ul[data-baseweb="menu"],
-    div[id^="baseui-menu-"] {{
+    div[role="listbox"],
+    ul[role="listbox"],
+    div[class*="popover"],
+    div[class*="menu"] {{
         background-color: #0f172a !important;
         color: #f8fafc !important;
     }}
 
-    div[data-baseweb="popover"] div, 
-    div[data-baseweb="popover"] span,
-    ul[data-baseweb="menu"] li {{
+    li[data-baseweb="option"], 
+    div[data-baseweb="option"],
+    div[role="option"],
+    li[role="option"] {{
         background-color: #0f172a !important;
         color: #f8fafc !important;
     }}
 
-    li[data-baseweb="option"] {{
-        background-color: #0f172a !important;
-        color: #f8fafc !important;
-    }}
-    
-    li[data-baseweb="option"]:hover {{
+    li[data-baseweb="option"]:hover, 
+    div[data-baseweb="option"]:hover,
+    div[role="option"]:hover,
+    li[role="option"]:hover {{
         background-color: #1e293b !important;
         color: #38bdf8 !important;
     }}
 
-    /* خانة رفع الملفات File Uploader داكنة تماماً */
+    /* صندوق رفع الملفات */
     section[data-testid="stFileUploader"] {{
         background-color: #1e293b !important;
         border: 2px dashed #3b82f6 !important;
@@ -173,7 +176,7 @@ st.markdown(f"""
         font-weight: 800 !important;
     }}
 
-    /* النصوص والعناوين العامة */
+    /* العناوين والنصوص */
     label, p, span, div, h1, h2, h3, h4, h5, h6 {{
         color: #f8fafc !important;
     }}
@@ -184,7 +187,7 @@ st.markdown(f"""
         border-right: 1px solid #1e293b;
     }}
 
-    /* بطاقات الإحصائيات KPIs */
+    /* بطاقات KPIs */
     div[data-testid="stMetric"] {{
         background: rgba(30, 41, 59, 0.85) !important;
         border: 1px solid #334155 !important;
@@ -202,7 +205,6 @@ st.markdown(f"""
         font-weight: 800 !important;
     }}
 
-    /* إطارات الاستمارات والجداول */
     div[data-testid="stForm"], div.stTabs [data-baseweb="tab-panel"] {{
         background: rgba(30, 41, 59, 0.85) !important;
         border: 1px solid #334155 !important;
@@ -210,7 +212,6 @@ st.markdown(f"""
         padding: 20px !important;
     }}
 
-    /* أزرار الإرسال والحفظ */
     .stButton > button {{
         border-radius: 8px !important;
         font-weight: 700 !important;
@@ -225,6 +226,26 @@ st.markdown(f"""
     }}
     </style>
 """, unsafe_allow_html=True)
+
+# حل إضافي بواسطة JavaScript لمراقبة وتعديل خلفية عناصر الـ Dropdown في نافذة المتصفح الرئيسية (Root DOM)
+components.html("""
+<script>
+const observeDropdowns = () => {
+    const observer = new MutationObserver((mutations) => {
+        document.querySelectorAll('div[data-baseweb="popover"], div[data-baseweb="menu"], ul[data-baseweb="menu"], div[role="listbox"]').forEach(el => {
+            el.style.backgroundColor = '#0f172a';
+            el.style.color = '#f8fafc';
+        });
+        document.querySelectorAll('li[data-baseweb="option"], div[data-baseweb="option"], div[role="option"]').forEach(el => {
+            el.style.backgroundColor = '#0f172a';
+            el.style.color = '#f8fafc';
+        });
+    });
+    observer.observe(parent.document.body, { childList: true, subtree: true });
+};
+try { observeDropdowns(); } catch(e) {}
+</script>
+""", height=0)
 
 # 4. إنشاء قاعدة البيانات
 conn = sqlite3.connect('inventory_system.db', check_same_thread=False)
@@ -249,7 +270,7 @@ c.execute('''CREATE TABLE IF NOT EXISTS transactions (
 
 conn.commit()
 
-# 5. دالة جلب وحساب بيانات المخزون
+# 5. جلب وحساب البيانات
 def get_inventory():
     df_prod = pd.read_sql_query("SELECT * FROM products", conn)
     df_trans = pd.read_sql_query("SELECT * FROM transactions", conn)
@@ -279,7 +300,6 @@ def get_inventory():
 st.title(t["title"])
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs(t["tabs"])
-
 df_inv = get_inventory()
 
 # ==================== Tab 1: لوحة التحكم ====================
