@@ -1,114 +1,225 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
+import sqlite3
+from datetime import datetime
+from io import StringIO
 
-# 1. إعدادات الصفحة
-st.set_page_config(page_title="نظام إدارة المخزون الاحترافي", layout="wide", page_icon="📦")
+# 1. إعداد الصفحة
+st.set_page_config(page_title="نظام إدارة المخزون والمبيعات المتكامل", layout="wide")
 
 st.markdown("""
     <style>
     .main { direction: rtl; text-align: right; }
-    .stMetric { text-align: right; }
+    div[data-testid="stMetric"] {
+        background-color: #1e293b;
+        color: #ffffff;
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #334155;
+    }
+    div[data-testid="stMetricValue"] { color: #3b82f6 !important; }
     </style>
 """, unsafe_allow_html=True)
 
-st.title("📦 نظام إدارة وتسيير المخزونات الاحترافي")
+# 2. إنشاء وإنشاء جداول قاعدة البيانات (SQLite)
+conn = sqlite3.connect('inventory_system.db', check_same_thread=False)
+c = conn.cursor()
 
-# 2. القائمة الجانبية: رفع ملفات Excel
-st.sidebar.header("لوحة التسيير واستيراد البيانات ⚙️")
+c.execute('''CREATE TABLE IF NOT EXISTS products (
+                sku TEXT PRIMARY KEY,
+                name TEXT,
+                category TEXT,
+                initial_stock REAL,
+                price REAL,
+                min_limit REAL)''')
 
-uploaded_file = st.sidebar.file_uploader("رفع/تحديث عبر Excel", type=["xlsx", "xls", "csv"])
+c.execute('''CREATE TABLE IF NOT EXISTS transactions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                sku TEXT,
+                type TEXT,
+                quantity REAL,
+                unit_price REAL,
+                party_name TEXT,
+                date TEXT)''')
 
-if 'inventory' not in st.session_state:
-    st.session_state.inventory = pd.DataFrame()
+conn.commit()
 
-if uploaded_file is not None:
-    try:
-        if uploaded_file.name.endswith('.csv'):
-            df_uploaded = pd.read_csv(uploaded_file)
-        else:
-            df_uploaded = pd.read_excel(uploaded_file)
-            
-        df_uploaded.columns = df_uploaded.columns.str.strip()
-        
-        # خريطة لتوحيد أسماء الأعمدة بالعربية أو الإنجليزية
-        col_map = {
-            'sku': 'الكود',
-            'name': 'اسم المنتج / المادة',
-            'category': 'الفئة',
-            'initial_stock': 'م. الأول',
-            'inputs': '(+) المدخلات',
-            'outputs': '(-) المخرجات',
-            'unit_price': 'سعر الوحدة (د.ج)',
-            'min_limit': 'حد الطلب الأدنى'
-        }
-        df_uploaded = df_uploaded.rename(columns=col_map)
-        st.session_state.inventory = df_uploaded
-        st.sidebar.success("تم تحميل الملف بنجاح!")
-    except Exception as e:
-        st.sidebar.error(f"حدث خطأ أثناء تحميل الملف: {e}")
-
-# 3. معالجة وتنظيف البيانات
-if not st.session_state.inventory.empty:
-    df = st.session_state.inventory.copy()
-
-    # إكمال الأعمدة الناقصة إن وجدت
-    expected_cols = ['الكود', 'اسم المنتج / المادة', 'الفئة', 'م. الأول', '(+) المدخلات', '(-) المخرجات', 'سعر الوحدة (د.ج)', 'حد الطلب الأدنى']
-    for col in expected_cols:
-        if col not in df.columns:
-            df[col] = 0 if col not in ['الكود', 'اسم المنتج / المادة', 'الفئة'] else '-'
-
-    # تحويل القيم الفارغة (None / NaN) إلى صفر للأعداد
-    num_cols = ['م. الأول', '(+) المدخلات', '(-) المخرجات', 'سعر الوحدة (د.ج)', 'حد الطلب الأدنى']
-    for col in num_cols:
-        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
-
-    # خوارزميات الحساب الآلي
-    # المخزون الباقي = م. الأول + المدخلات - المخرجات
-    df['المخزون الباقي'] = df['م. الأول'] + df['(+) المدخلات'] - df['(-) المخرجات']
-    df['القيمة الإجمالية (د.ج)'] = df['المخزون الباقي'] * df['سعر الوحدة (د.ج)']
-
-    # تحديد الحالة تلقائياً
-    def get_status(row):
-        if row['المخزون الباقي'] <= 0:
-            return '🔴 نفد من المخزون'
-        elif row['المخزون الباقي'] <= row['حد الطلب الأدنى']:
-            return '🟡 منخفض'
-        else:
-            return '🟢 متوفر'
-
-    df['الحالة'] = df.apply(get_status, axis=1)
-
-    # ترتيب الأعمدة للعرض
-    display_cols = [
-        'الكود', 'اسم المنتج / المادة', 'الفئة', 'م. الأول', 
-        '(+) المدخلات', '(-) المخرجات', 'المخزون الباقي', 
-        'سعر الوحدة (د.ج)', 'حد الطلب الأدنى', 'الحالة'
-    ]
-
-    # 4. عرض الجدول التفاعلي
-    st.subheader("📋 جدول المواد والمخزون")
+# 3. الدوال المساعدة للعمليات والحسابات
+def get_inventory():
+    df_prod = pd.read_sql_query("SELECT * FROM products", conn)
+    df_trans = pd.read_sql_query("SELECT * FROM transactions", conn)
     
-    edited_df = st.data_editor(
-        df[display_cols],
-        column_config={
-            "سعر الوحدة (د.ج)": st.column_config.NumberColumn(format="%.2f د.ج"),
-            "المخزون الباقي": st.column_config.NumberColumn(disabled=True),
-            "الحالة": st.column_config.TextColumn(disabled=True),
-        },
-        use_container_width=True,
-        hide_index=True
-    )
+    if df_prod.empty:
+        return pd.DataFrame(columns=['sku', 'name', 'category', 'initial_stock', 'inputs', 'outputs', 'stock', 'price', 'total_value', 'min_limit', 'status'])
+    
+    # حساب المدخلات والمخرجات لكل منتج
+    inputs = df_trans[df_trans['type'] == 'إدخال'].groupby('sku')['quantity'].sum().to_dict() if not df_trans.empty else {}
+    outputs = df_trans[df_trans['type'] == 'إخراج'].groupby('sku')['quantity'].sum().to_dict() if not df_trans.empty else {}
+    
+    df_prod['inputs'] = df_prod['sku'].map(inputs).fillna(0)
+    df_prod['outputs'] = df_prod['sku'].map(outputs).fillna(0)
+    df_prod['stock'] = df_prod['initial_stock'] + df_prod['inputs'] - df_prod['outputs']
+    df_prod['total_value'] = df_prod['stock'] * df_prod['price']
+    
+    def get_status(row):
+        if row['stock'] <= 0:
+            return '🔴 نفد من المخزون'
+        elif row['stock'] <= row['min_limit']:
+            return '🟡 منخفض (تحت حد الطلب)'
+        return '🟢 متوفر'
+        
+    df_prod['status'] = df_prod.apply(get_status, axis=1)
+    return df_prod
 
-    if st.button("💾 حفظ كل التعديلات في قاعدة البيانات", type="primary"):
-        st.session_state.inventory = edited_df
-        st.success("تم حفظ التعديلات بنجاح!")
-        st.rerun()
+# 4. شريط العنوان والتنقل الرئيسي
+st.title("📦 نظام إدارة المخزون والمبيعات المتكامل")
 
-    # 5. التقييم المالي
-    st.subheader("💰 التقييم المالي الإجمالي")
-    total_val = df['القيمة الإجمالية (د.ج)'].sum()
-    st.metric("إجمالي قيمة المخزون الحالي", f"{total_val:,.2f} د.ج")
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    "📊 لوحة التحكم", 
+    "📦 إدارة المنتجات", 
+    "🧾 المبيعات والفواتير", 
+    "📥 المشتريات والمدخلات", 
+    "📜 سجل الحركة والتقارير"
+])
 
-else:
-    st.info("يرجى رفع ملف Excel يحتوي على بيانات المواد لبدء العرض الحسابي.")
+df_inv = get_inventory()
+
+# ==================== Tab 1: لوحة التحكم ====================
+with tab1:
+    st.subheader("📊 مؤشرات المخزون العامة")
+    c1, c2, c3, c4 = st.columns(4)
+    
+    total_items = len(df_inv)
+    total_stock = df_inv['stock'].sum() if not df_inv.empty else 0
+    total_val = df_inv['total_value'].sum() if not df_inv.empty else 0
+    low_stock = len(df_inv[df_inv['stock'] <= df_inv['min_limit']]) if not df_inv.empty else 0
+    
+    c1.metric("إجمالي المنتجات", f"{total_items}")
+    c2.metric("إجمالي القطع المخزنة", f"{total_stock:,.0f}")
+    c3.metric("القيمة المالية الإجمالية", f"${total_val:,.2f}")
+    c4.metric("منتجات تحت حد الطلب", f"{low_stock}")
+    
+    st.divider()
+    st.subheader("📋 حالة المخزون الحالية")
+    if not df_inv.empty:
+        st.dataframe(
+            df_inv[['sku', 'name', 'category', 'stock', 'price', 'total_value', 'status']],
+            column_config={
+                "sku": "رقم المنتج", "name": "اسم المنتج", "category": "الفئة",
+                "stock": "المخزون المتبقي", "price": "السعر ($)", "total_value": "القيمة ($)", "status": "الحالة"
+            },
+            use_container_width=True, hide_index=True
+        )
+
+# ==================== Tab 2: إدارة المنتجات ====================
+with tab2:
+    col_add, col_file = st.columns([2, 1])
+    
+    with col_add:
+        st.subheader("➕ إضافة / تعديل منتج")
+        with st.form("product_form"):
+            p_sku = st.text_input("رقم المنتج (SKU)")
+            p_name = st.text_input("اسم المنتج")
+            p_cat = st.selectbox("الفئة", ["إلكترونيات", "قطع غيار", "أثاث", "عام"])
+            p_init = st.number_input("المخزون الأولي", min_value=0.0, value=0.0)
+            p_price = st.number_input("سعر الوحدة ($)", min_value=0.0, value=0.0)
+            p_min = st.number_input("حد الطلب الأدنى", min_value=0.0, value=5.0)
+            
+            btn_save = st.form_submit_button("حفظ المنتج")
+            if btn_save and p_sku and p_name:
+                c.execute('''INSERT INTO products (sku, name, category, initial_stock, price, min_limit)
+                             VALUES (?, ?, ?, ?, ?, ?)
+                             ON CONFLICT(sku) DO UPDATE SET
+                             name=excluded.name, category=excluded.category,
+                             price=excluded.price, min_limit=excluded.min_limit''',
+                          (p_sku, p_name, p_cat, p_init, p_price, p_min))
+                conn.commit()
+                st.success("تم حفظ المنتج بنجاح في قاعدة البيانات!")
+                st.rerun()
+
+    with col_file:
+        st.subheader("📥 استيراد من Excel")
+        up_file = st.file_uploader("رفع ملف Excel", type=["xlsx", "csv"])
+        if up_file:
+            try:
+                df_up = pd.read_csv(up_file) if up_file.name.endswith('.csv') else pd.read_excel(up_file)
+                for _, row in df_up.iterrows():
+                    c.execute('''INSERT INTO products (sku, name, category, initial_stock, price, min_limit)
+                                 VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(sku) DO NOTHING''',
+                              (str(row['SKU']), str(row['Name']), str(row['Category']), float(row['InitialStock']), float(row['Price']), float(row['MinLimit'])))
+                conn.commit()
+                st.success("تم استيراد البيانات بنجاح!")
+                st.rerun()
+            except Exception as e:
+                st.error(f"خطأ أثناء التحميل: {e}")
+
+# ==================== Tab 3: المبيعات والفواتير ====================
+with tab3:
+    st.subheader("🧾 تسجيل عملية بيع / مخرجات")
+    if not df_inv.empty:
+        with st.form("sale_form"):
+            col_s1, col_s2, col_s3 = st.columns(3)
+            selected_sku = col_s1.selectbox("اختر المنتج", df_inv['sku'] + " - " + df_inv['name'])
+            sku_code = selected_sku.split(" - ")[0]
+            
+            current_p = df_inv[df_inv['sku'] == sku_code].iloc[0]
+            
+            qty_out = col_s2.number_input("الكمية المباعة", min_value=1.0, value=1.0)
+            client_name = col_s3.text_input("اسم الزبون / الجهة", value="زبون عام")
+            
+            st.info(f"المخزون المتاح حالياً: {current_p['stock']} | سعر الوحدة: ${current_p['price']}")
+            
+            btn_sell = st.form_submit_button("تسجيل البيع وإصدار الفاتورة")
+            if btn_sell:
+                if qty_out > current_p['stock']:
+                    st.error("الكمية المطلوبة أكبر من المخزون المتاح!")
+                else:
+                    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    c.execute("INSERT INTO transactions (sku, type, quantity, unit_price, party_name, date) VALUES (?, ?, ?, ?, ?, ?)",
+                              (sku_code, 'إخراج', qty_out, current_p['price'], client_name, now))
+                    conn.commit()
+                    st.success(f"تم تسجيل المبيعات بنجاح للزبون {client_name}!")
+                    st.rerun()
+
+# ==================== Tab 4: المشتريات والمدخلات ====================
+with tab4:
+    st.subheader("📥 تسجيل عملية توريد / مدخلات جديدة")
+    if not df_inv.empty:
+        with st.form("buy_form"):
+            col_b1, col_b2, col_b3 = st.columns(3)
+            selected_b_sku = col_b1.selectbox("اختر المنتج لتزويده", df_inv['sku'] + " - " + df_inv['name'])
+            b_sku_code = selected_b_sku.split(" - ")[0]
+            
+            qty_in = col_b2.number_input("الكمية المستلمة", min_value=1.0, value=1.0)
+            supplier_name = col_b3.text_input("اسم المورد", value="مورد عام")
+            
+            btn_buy = st.form_submit_button("إضافة للمخزون")
+            if btn_buy:
+                now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                unit_p = df_inv[df_inv['sku'] == b_sku_code].iloc[0]['price']
+                c.execute("INSERT INTO transactions (sku, type, quantity, unit_price, party_name, date) VALUES (?, ?, ?, ?, ?, ?)",
+                          (b_sku_code, 'إدخال', qty_in, unit_p, supplier_name, now))
+                conn.commit()
+                st.success("تمت إضافة الكميات الجديدة للمخزون بنجاح!")
+                st.rerun()
+
+# ==================== Tab 5: السجل والتقارير ====================
+with tab5:
+    st.subheader("📜 سجل حركة المخزون التاريخي (Ledger)")
+    df_history = pd.read_sql_query("""
+        SELECT t.id, t.date as 'التاريخ', t.sku as 'رقم المنتج', p.name as 'اسم المنتج', 
+               t.type as 'نوع العملية', t.quantity as 'الكمية', t.unit_price as 'سعر الوحدة', 
+               (t.quantity * t.unit_price) as 'الإجمالي', t.party_name as 'الطرف الآخر'
+        FROM transactions t
+        LEFT JOIN products p ON t.sku = p.sku
+        ORDER BY t.id DESC
+    """, conn)
+    
+    if not df_history.empty:
+        st.dataframe(df_history, use_container_width=True, hide_index=True)
+        
+        # تصدير التقرير
+        csv_data = df_history.to_csv(index=False).encode('utf-8-sig')
+        st.download_button("📥 تحميل سجل الحركة الكامل (CSV)", data=csv_data, file_name="سجل_حركة_المخزون.csv", mime="text/csv")
+    else:
+        st.info("لا توجد عمليات مسجلة في السجل بعد.")
